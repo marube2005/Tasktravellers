@@ -1,6 +1,7 @@
-// lib/payment_screen.dart
+// lib/pages/payment_checkout_screen.dart
 import 'package:flutter/material.dart';
-import 'package:travelers_app/main.dart'; // Adjust import path
+import 'package:frontend/utils/constants.dart';
+// import 'package:travelers_app/main.dart'; // Adjust import path
 
 class PaymentScreen extends StatelessWidget {
   const PaymentScreen({super.key});

@@ -120,7 +120,7 @@ class MatatuDetailsScreen extends StatelessWidget {
               onPressed: () {},
               child: Text('Book Now'),
               style: ElevatedButton.styleFrom(
-                primary: Colors.blue,
+                backgroundColor: Colors.blue,
                 minimumSize: Size(double.infinity, 50),
               ),
             ),

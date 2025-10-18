@@ -1,7 +1,8 @@
-// lib/live_tracking_screen.dart
+// lib/pages/ride_tracking_screen.dart
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:travelers_app/main.dart'; // Adjust import path
+import 'package:frontend/utils/constants.dart';
+// import 'package:travelers_app/main.dart'; // Adjust import path
 
 class LiveTrackingScreen extends StatelessWidget {
   const LiveTrackingScreen({super.key});

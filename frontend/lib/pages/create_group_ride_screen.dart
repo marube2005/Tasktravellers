@@ -52,7 +52,7 @@ class CreateGroupRideScreen extends StatelessWidget {
               onPressed: () {},
               child: Text('Next'),
               style: ElevatedButton.styleFrom(
-                primary: Colors.blue,
+                backgroundColor: Colors.blue,
                 minimumSize: Size(double.infinity, 50),
               ),
             ),

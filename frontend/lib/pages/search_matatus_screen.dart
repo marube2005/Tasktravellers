@@ -1,6 +1,6 @@
--// lib/matatu_list_screen.dart
+// lib/pages/search_matatus_screen.dart
 import 'package:flutter/material.dart';
-import 'package:travelers_app/main.dart'; // Adjust import path
+import 'package:frontend/utils/constants.dart';
 
 // A simple data model for a Matatu
 class Matatu {
