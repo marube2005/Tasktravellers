@@ -1,6 +1,6 @@
-// lib/role_selection_screen.dart
+// lib/pages/role_selection_screen.dart
 import 'package:flutter/material.dart';
-import 'package:travelers_app/main.dart'; // Adjust import path
+import 'package:frontend/utils/constants.dart';
 
 // Define an enum for the roles for type safety
 enum AppRole { passenger, sacco }
@@ -35,8 +35,6 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Choose Your Role'),
