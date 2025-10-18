@@ -1,11 +1,25 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart'; // Add uuid package to your pubspec.yaml
+import 'package:uuid/uuid.dart';
+import 'package:http/http.dart' as http; // Added for API calls
+import 'dart:convert'; // Added for jsonEncode/Decode
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // Added to load credentials
 
 /// A service class to handle payment processing, commission calculation,
-/// and transaction recording using PayHero (simulated via Edge Function).
+/// and transaction recording using PayHero.
+///
+/// WARNING: This implementation calls PayHero directly from the client,
+/// which is insecure for production. Use a Supabase Edge Function instead.
 class PaymentService {
   final SupabaseClient _supabaseClient = Supabase.instance.client;
   static const double _commissionRate = 0.05; // 5% commission
+
+  // --- PayHero Credentials (INSECURE: For testing only) ---
+  // Load these from your .env file
+  final String _apiUsername = dotenv.env['PAYHERO_API_USERNAME'] ?? '';
+  final String _apiPassword = dotenv.env['PAYHERO_API_PASSWORD'] ?? '';
+  final int _channelId = int.tryParse(dotenv.env['PAYHERO_CHANNEL_ID'] ?? '0') ?? 0;
+  final String _callbackUrl = dotenv.env['PAYHERO_CALLBACK_URL'] ?? '';
+  // ---------------------------------------------------------
 
   /// Private constructor for Singleton pattern.
   PaymentService._internal();
@@ -17,20 +31,32 @@ class PaymentService {
   // Helper to get the current authenticated user's ID
   String? get _currentUserId => _supabaseClient.auth.currentUser?.id;
 
+  /// Helper to generate the Basic Auth token for PayHero
+  String _getBasicAuthToken() {
+    if (_apiUsername.isEmpty || _apiPassword.isEmpty) {
+      throw Exception('PayHero API credentials are not set in .env file');
+    }
+    final String credentials = '$_apiUsername:$_apiPassword';
+    final String encodedCredentials = base64Encode(utf8.encode(credentials));
+    return 'Basic $encodedCredentials';
+  }
+
   /// =========================================================================
   /// 1. TRANSACTION INITIATION
   /// =========================================================================
 
-  /// Initiates a payment for a completed ride.
-  ///
-  /// This function simulates initiating an M-Pesa STK push via PayHero,
-  /// typically proxied through a Supabase Edge Function for security.
+  /// Initiates a payment for a completed ride by triggering an M-Pesa STK Push
+  /// directly via the PayHero API.
   ///
   /// @param rideId The ID of the ride being paid for.
   /// @param amount The total estimated fare for the ride.
+  /// @param phoneNumber The customer's phone number (e.g., 0712345678).
+  /// @param customerName The customer's name (e.g., John Doe).
   Future<void> initiatePayment({
     required String rideId,
     required double amount,
+    required String phoneNumber,
+    required String customerName,
   }) async {
     final payerId = _currentUserId;
     if (payerId == null) {
@@ -41,14 +67,18 @@ class PaymentService {
       throw Exception('Payment amount must be greater than zero.');
     }
 
+    if (_channelId == 0 || _callbackUrl.isEmpty) {
+      throw Exception('PayHero Channel ID or Callback URL is not set in .env file');
+    }
+
     final commission = amount * _commissionRate;
     final totalAmount = amount; // Total amount paid by the passenger
+    final int amountInt = totalAmount.toInt(); // PayHero requires an Integer
 
-    // 1. Create a unique, preliminary transaction ID (optional, but useful)
-    final provisionalTxId = const Uuid().v4(); 
+    // 1. Create a unique external reference
+    final externalReference = const Uuid().v4();
 
     // 2. Record the transaction in the 'transactions' table with 'pending' status.
-    // This ensures we have a record even if the external payment fails.
     try {
       await _supabaseClient.from('transactions').insert({
         'ride_id': rideId,
@@ -56,44 +86,67 @@ class PaymentService {
         'amount': totalAmount,
         'commission': commission,
         'status': 'pending',
-        // Optional: Store the provisional ID until PayHero returns a final one.
-        'payhero_tx_id': provisionalTxId, 
+        'external_reference': externalReference, // Use this to track
       });
-
     } on PostgrestException catch (e) {
-      throw Exception('Database Error recording initial transaction: ${e.message}');
+      throw Exception(
+          'Database Error recording initial transaction: ${e.message}');
     }
 
-    // 3. Call the Secure Backend/Edge Function to trigger the M-Pesa STK Push.
-    // NOTE: This call must contain sensitive data like phone number, amount, etc.
-    // The actual PayHero integration logic resides here.
+    // 3. Call the PayHero API to trigger the STK Push.
+    // (This replaces the secure Edge Function call)
     try {
-      // Assuming you use a Supabase Edge Function named 'payhero-stk-push'
-      // You would pass the details required by the payment gateway (phone, amount, etc.)
-      // The function should return a status and the final PayHero reference ID.
-      final response = await _supabaseClient.functions.invoke(
-        'payhero-stk-push', // Name of your Supabase Edge Function
-        body: {
-          'rideId': rideId,
-          'amount': totalAmount,
-          'payerId': payerId,
-          // 'phone': fetchUserPhone(payerId), // Need to fetch phone from 'users' table
-          'callbackUrl': 'YOUR_SUPABASE_WEBHOOK_URL', // URL for PayHero to confirm payment
-        },
-      );
+      final String authorizationHeader = _getBasicAuthToken();
       
-      // In a real scenario, this response would contain the STK Push success status
-      // and the unique transaction ID from PayHero/M-Pesa.
-      
-      // For this example, we assume the STK push was successfully initiated.
-      // The actual 'completed' or 'failed' update happens in a backend webhook.
+      final Map<String, dynamic> body = {
+        'amount': amountInt,
+        'phone_number': phoneNumber,
+        'channel_id': _channelId,
+        'provider': 'm-pesa', // As per PayHero docs
+        'external_reference': externalReference, // Our unique UUID
+        'customer_name': customerName,
+        'callback_url': _callbackUrl,
+      };
 
+      final response = await http.post(
+        Uri.parse('https://backend.payhero.co.ke/api/v2/payments'),
+        headers: {
+          'Authorization': authorizationHeader,
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode == 200) {
+        // STK Push was successfully initiated by PayHero
+        final responseData = jsonDecode(response.body);
+        final String? payheroReference = responseData['reference'];
+        final String? checkoutRequestId = responseData['CheckoutRequestID'];
+
+        // 4. Update our transaction record with the PayHero references
+        await _supabaseClient
+            .from('transactions')
+            .update({
+              'payhero_reference': payheroReference,
+              'checkout_request_id': checkoutRequestId,
+              'status': 'queued', // Update status to show STK is active
+            })
+            .eq('external_reference', externalReference);
+        
+        // Success: STK push is on its way to the user's phone.
+        // The final 'completed' or 'failed' status will be sent
+        // by PayHero to your _callbackUrl (which should be a webhook/Edge Function).
+
+      } else {
+        // The API call to PayHero failed
+        throw Exception(
+            'Failed to initiate PayHero payment (Code ${response.statusCode}): ${response.body}');
+      }
     } catch (e) {
       // If the API call fails, the transaction status remains 'pending'
-      throw Exception('Failed to initiate PayHero payment process. Please try again.');
+      // You may want to add logic to update it to 'failed_initiation'
+      throw Exception('Failed to initiate PayHero payment process: $e');
     }
-    
-    // Success means the STK push has been initiated; user awaits prompt on phone.
   }
 
   /// =========================================================================
@@ -111,7 +164,8 @@ class PaymentService {
       // Fetch all transactions where the current user is the payer
       final List<Map<String, dynamic>> transactions = await _supabaseClient
           .from('transactions')
-          .select('*, rides(origin, destination)') // Select transaction and join basic ride details
+          .select(
+              '*, rides(origin, destination)') // Select transaction and join basic ride details
           .eq('payer_id', userId)
           .order('created_at', ascending: false);
 
@@ -119,7 +173,8 @@ class PaymentService {
     } on PostgrestException catch (e) {
       throw Exception('Database Error fetching transactions: ${e.message}');
     } catch (e) {
-      throw Exception('An unexpected error occurred while fetching transactions: $e');
+      throw Exception(
+          'An unexpected error occurred while fetching transactions: $e');
     }
   }
 
@@ -134,7 +189,8 @@ class PaymentService {
       // Find rides managed by the Sacco
       final List<Map<String, dynamic>> earnings = await _supabaseClient
           .from('transactions')
-          .select('*, rides(provider_id, origin, destination)') // Join ride details
+          .select(
+              '*, rides(provider_id, origin, destination)') // Join ride details
           .eq('status', 'completed')
           .eq('rides.provider_id', saccoId); // Filter by the Sacco's ID
 
@@ -144,7 +200,8 @@ class PaymentService {
     } on PostgrestException catch (e) {
       throw Exception('Database Error fetching Sacco earnings: ${e.message}');
     } catch (e) {
-      throw Exception('An unexpected error occurred while fetching Sacco earnings: $e');
+      throw Exception(
+          'An unexpected error occurred while fetching Sacco earnings: $e');
     }
   }
 }

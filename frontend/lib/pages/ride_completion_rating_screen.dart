@@ -16,6 +16,7 @@ class _RideCompleteScreenState extends State<RideCompleteScreen> {
   void _setRating(int rating) {
     setState(() {
       _rating = rating;
+      // HELLO
     });
   }
 

@@ -9,7 +9,7 @@ class WelcomeScreen extends StatelessWidget {
 			appBar: AppBar(title: const Text('Welcome')),
 			body: Center(
 				child: ElevatedButton(
-					onPressed: () => Navigator.pushNamed(context, '/dashboard'),
+					onPressed: () => Navigator.pushNamed(context, '/login'),
 					child: const Text('Go to Dashboard'),
 				),
 			),

@@ -9,6 +9,9 @@ import 'package:frontend/pages/search_matatus_screen.dart';
 import 'package:frontend/pages/payment_checkout_screen.dart';
 import 'package:frontend/pages/ride_completion_rating_screen.dart';
 import 'package:frontend/pages/ride_tracking_screen.dart';
+import 'package:frontend/pages/welcome_screen.dart';
+import 'package:frontend/pages/login_screen.dart';
+import 'package:frontend/pages/register_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -122,12 +125,15 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.system, // Automatically adapts to system settings
 
       // --- Routing ---
-      // The first screen the user sees.
-      initialRoute: '/dashboard', 
+  // The first screen the user sees.
+  initialRoute: '/welcome', 
       
       // Defines all the possible screens in your app.
       routes: {
-        '/role-selection': (context) => const RoleSelectionScreen(),
+  '/welcome': (context) => const WelcomeScreen(),
+  '/login': (context) => const LoginScreen(),
+  '/register': (context) => const SignUpScreen(),
+  '/role-selection': (context) => const RoleSelectionScreen(),
         '/dashboard': (context) => const PassengerDashboardScreen(),
         '/matatu-list': (context) => const MatatuListScreen(),
         '/payment': (context) => const PaymentScreen(),
