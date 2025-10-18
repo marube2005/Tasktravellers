@@ -2,13 +2,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-// Import all the screen files you have created
-import 'package:travelers_app/role_selection_screen.dart';
-import 'package:travelers_app/dashboard_screen.dart';
-import 'package:travelers_app/matatu_list_screen.dart';
-import 'package:travelers_app/payment_screen.dart';
-import 'package:travelers_app/ride_complete_screen.dart';
-import 'package:travelers_app/live_tracking_screen.dart';
+// Import all the screen files you have created (updated to local package paths)
+import 'package:frontend/pages/role_selection_screen.dart';
+import 'package:frontend/pages/passenger_dashboard_screen.dart';
+import 'package:frontend/pages/search_matatus_screen.dart';
+import 'package:frontend/pages/payment_checkout_screen.dart';
+import 'package:frontend/pages/ride_completion_rating_screen.dart';
+import 'package:frontend/pages/ride_tracking_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -128,7 +128,7 @@ class MyApp extends StatelessWidget {
       // Defines all the possible screens in your app.
       routes: {
         '/role-selection': (context) => const RoleSelectionScreen(),
-        '/dashboard': (context) => const DashboardScreen(),
+        '/dashboard': (context) => const PassengerDashboardScreen(),
         '/matatu-list': (context) => const MatatuListScreen(),
         '/payment': (context) => const PaymentScreen(),
         '/ride-complete': (context) => const RideCompleteScreen(),
