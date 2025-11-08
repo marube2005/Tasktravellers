@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../themes/app_colors.dart';
+import '../services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -18,45 +19,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  Future<void> _signUp() async {
+  void _signUp() {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isLoading = true);
 
-    try {
-      final supabase = Supabase.instance.client;
-      final authResponse = await supabase.auth.signUp(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-
-      final user = authResponse.user;
-      if (user == null) throw Exception("Signup failed.");
-
-      await supabase.from('users').insert({
-        'id': user.id,
-        'email': _emailController.text.trim(),
-        'phone': _phoneController.text.trim(),
-        'name': _nameController.text.trim(),
-        'role': 'passenger',
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Signup successful! Verify your email.')),
-        );
-        Navigator.pushReplacementNamed(context, '/login');
-      }
-    } on AuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    AuthService()
+        .signUpUser(
+          name: _nameController.text,
+          email: _emailController.text,
+          phone: _phoneController.text,
+          password: _passwordController.text,
+          context: context, // optional, for snackbars & navigation
+        )
+        .whenComplete(() {
+          if (mounted) setState(() => _isLoading = false);
+        });
   }
 
   @override

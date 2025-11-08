@@ -9,6 +9,7 @@ import 'pages/search_matatus_screen.dart';
 import 'pages/payment_checkout_screen.dart';
 import 'pages/ride_completion_rating_screen.dart';
 import 'pages/ride_tracking_screen.dart';
+import 'pages/email_verification.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -30,6 +31,7 @@ class MyApp extends StatelessWidget {
         '/welcome': (context) => const WelcomeScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const SignUpScreen(),
+         '/email_verification': (context) => const EmailVerificationScreen(),
         '/role-selection': (context) => const RoleSelectionScreen(),
         '/dashboard': (context) => const PassengerDashboardScreen(),
         '/matatu-list': (context) => const MatatuListScreen(),
