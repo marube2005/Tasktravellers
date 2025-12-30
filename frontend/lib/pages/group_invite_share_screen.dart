@@ -5,6 +5,8 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -14,6 +16,8 @@ class MyApp extends StatelessWidget {
 }
 
 class MatatuDetailsScreen extends StatelessWidget {
+  const MatatuDetailsScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -118,11 +122,11 @@ class MatatuDetailsScreen extends StatelessWidget {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {},
-              child: Text('Book Now'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 minimumSize: Size(double.infinity, 50),
               ),
+              child: Text('Book Now'),
             ),
           ],
         ),

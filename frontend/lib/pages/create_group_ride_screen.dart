@@ -5,6 +5,8 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -14,6 +16,8 @@ class MyApp extends StatelessWidget {
 }
 
 class CreateGroupRideScreen extends StatelessWidget {
+  const CreateGroupRideScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,11 +54,11 @@ class CreateGroupRideScreen extends StatelessWidget {
             SizedBox(height: 10),
             ElevatedButton(
               onPressed: () {},
-              child: Text('Next'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 minimumSize: Size(double.infinity, 50),
               ),
+              child: Text('Next'),
             ),
           ],
         ),

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/user_role.dart'; // Assuming you'll create this enum
 
 /// A service class to handle all Supabase Authentication logic.
 class AuthService {
@@ -13,14 +13,8 @@ class AuthService {
 
   /// Factory constructor to return the single instance of AuthService.
   factory AuthService() => _instance;
-
-  /// =========================================================================
-  /// 1. AUTH STATE STREAM
-  /// =========================================================================
-
-  /// Stream to listen for real-time changes in the user's authentication state.
-  /// This is typically used to navigate between the Auth and Main screens.
-  Stream<AuthState> get authStateChanges => _supabaseClient.auth.onAuthStateChange;
+  Stream<AuthState> get authStateChanges =>
+      _supabaseClient.auth.onAuthStateChange;
 
   /// Retrieves the current user session.
   Session? get currentSession => _supabaseClient.auth.currentSession;
@@ -37,65 +31,102 @@ class AuthService {
   /// depending on your flow. For simplicity and standard practice, Email/Password
   /// is shown, as the phone flow requires a separate package or backend logic
   /// for OTP verification in the client-side unless using 'signInWithOtp'.
-  Future<void> signUp({
-    required String email,
-    required String password,
+  Future<void> signUpUser({
     required String name,
+    required String email,
     required String phone,
-    required UserRole role,
+    required String password,
+    BuildContext? context, // optional, only if you want snackbars
   }) async {
     try {
-      // 1. Sign up the user in auth.users table
-      final AuthResponse response = await _supabaseClient.auth.signUp(
-        email: email,
-        password: password,
-        data: {'name': name, 'phone': phone}, // Optional metadata
+      final supabase = Supabase.instance.client;
+
+      final authResponse = await supabase.auth.signUp(
+        email: email.trim(),
+        password: password.trim(),
+        data: {'name': name.trim(), 'phone': phone.trim()},
       );
 
-      final User? user = response.user;
+      final user = authResponse.user;
+      if (user == null) throw Exception("Signup failed.");
 
-      if (user == null) {
-        throw Exception('User registration failed. No user returned.');
-      }
+      // Optionally insert into 'users' table if you don't use RLS triggers
+      // await supabase.from('users').insert({
+      //   'id': user.id,
+      //   'name': name,
+      //   'email': email,
+      //   'phone': phone,
+      //   'role': 'passenger',
+      // });
 
-      // 2. Insert the profile into the public 'users' table
-      // This step assumes you have RLS policies set up to allow this.
-      await _supabaseClient.from('users').insert({
-        'id': user.id,
-        'email': email,
-        'phone': phone,
-        'name': name,
-        'role': role.toShortString(), // Convert enum to string for DB
-      });
-
-      // Handle email verification if required (Supabase default)
-      if (user.emailConfirmedAt == null) {
-        // You might want to show a message to the user to check their email
-        debugPrint('Sign up successful! Please check your email for a verification link.');
+      if (context != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Signup successful! Check your email to verify.'),
+          ),
+        );
+        Navigator.pushReplacementNamed(context, '/email_verification');
       }
     } on AuthException catch (e) {
+      if (context != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
+      }
       throw Exception('Supabase Auth Error: ${e.message}');
     } catch (e) {
-      // Catch network errors, RLS errors, or general exceptions
-      throw Exception('An unexpected error occurred during sign up: $e');
+      if (context != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+      throw Exception('Unexpected signup error: $e');
     }
   }
 
   /// Logs in a user using email and password.
-  Future<void> signIn({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> loginUser(
+    String email,
+    String password,
+    BuildContext context,
+  ) async {
     try {
-      // Supabase automatically updates the session on successful sign-in
-      await _supabaseClient.auth.signInWithPassword(
-        email: email,
-        password: password,
+      final supabase = Supabase.instance.client;
+
+      final response = await supabase.auth.signInWithPassword(
+        email: email.trim(),
+        password: password.trim(),
       );
+
+      final user = response.user;
+      if (user == null) throw Exception('User not found.');
+
+      // 🔍 Check if verified
+      if (user.emailConfirmedAt == null) {
+        // Sign them out immediately
+        await supabase.auth.signOut();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please verify your email before logging in.'),
+          ),
+        );
+
+        // Redirect to verification screen
+        Navigator.pushReplacementNamed(context, '/email_verification');
+        return;
+      }
+
+      // ✅ Continue to home if verified
+      Navigator.pushReplacementNamed(context, '/home');
     } on AuthException catch (e) {
-      throw Exception('Supabase Auth Error: ${e.message}');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
-      throw Exception('An unexpected error occurred during sign in: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -115,7 +146,9 @@ class AuthService {
     try {
       await _supabaseClient.auth.resetPasswordForEmail(
         email,
-        redirectTo: kIsWeb ? null : 'io.supabase.travelersapp://login/reset-password',
+        redirectTo: kIsWeb
+            ? null
+            : 'io.supabase.travelersapp://login/reset-password',
       );
     } on AuthException catch (e) {
       throw Exception('Supabase Auth Error: ${e.message}');
@@ -153,7 +186,9 @@ class AuthService {
       }
       throw Exception('Database Error fetching profile: ${e.message}');
     } catch (e) {
-      throw Exception('An unexpected error occurred while fetching profile: $e');
+      throw Exception(
+        'An unexpected error occurred while fetching profile: $e',
+      );
     }
   }
 }
