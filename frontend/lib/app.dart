@@ -10,6 +10,7 @@ import 'pages/payment_checkout_screen.dart';
 import 'pages/ride_completion_rating_screen.dart';
 import 'pages/ride_tracking_screen.dart';
 import 'pages/email_verification.dart';
+import 'pages/sacco_dashboard_screen.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
       // ---------- ROUTING ----------
       initialRoute: '/welcome',
       routes: {
+        '/': (context) => const WelcomeScreen(),
         '/welcome': (context) => const WelcomeScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const SignUpScreen(),
@@ -38,6 +40,7 @@ class MyApp extends StatelessWidget {
         '/payment': (context) => const PaymentScreen(),
         '/ride-complete': (context) => const RideCompleteScreen(),
         '/live-tracking': (context) => const LiveTrackingScreen(),
+        '/sacco-dashboard': (context) => const SaccoDashboardScreen(),
       },
     );
   }

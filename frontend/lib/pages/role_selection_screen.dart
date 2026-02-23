@@ -23,13 +23,12 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   }
 
   void _continue() {
-    if (_selectedRole != null) {
-      // Navigate to the next screen based on the role
-      // Example: Navigator.of(context).push(...)
-      print('Selected Role: $_selectedRole');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Continuing as ${_selectedRole!.name}')),
-      );
+    if (_selectedRole == null) return;
+
+    if (_selectedRole == AppRole.passenger) {
+      Navigator.pushReplacementNamed(context, '/dashboard');
+    } else if (_selectedRole == AppRole.sacco) {
+      Navigator.pushReplacementNamed(context, '/sacco-dashboard');
     }
   }
 

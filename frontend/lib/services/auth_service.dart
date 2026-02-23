@@ -117,8 +117,8 @@ class AuthService {
         return;
       }
 
-      // ✅ Continue to home if verified
-      Navigator.pushReplacementNamed(context, '/home');
+      // ✅ Continue to role selection if verified
+      Navigator.pushReplacementNamed(context, '/role-selection');
     } on AuthException catch (e) {
       ScaffoldMessenger.of(
         context,
