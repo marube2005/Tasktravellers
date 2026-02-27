@@ -26,9 +26,9 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     if (_selectedRole == null) return;
 
     if (_selectedRole == AppRole.passenger) {
-      Navigator.pushReplacementNamed(context, '/dashboard');
+      Navigator.pushReplacementNamed(context, '/passenger-profile-setup');
     } else if (_selectedRole == AppRole.sacco) {
-      Navigator.pushReplacementNamed(context, '/sacco-dashboard');
+      Navigator.pushReplacementNamed(context, '/sacco-profile-setup');
     }
   }
 
@@ -68,6 +68,20 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                 subtitle: 'Manage your fleet and rides.',
                 isSelected: _selectedRole == AppRole.sacco,
                 onTap: () => _selectRole(AppRole.sacco),
+              ),
+              const SizedBox(height: 16),
+              // Disabled driver option
+              Opacity(
+                opacity: 0.5,
+                child: IgnorePointer(
+                  child: RoleCard(
+                    icon: Icons.drive_eta_outlined,
+                    title: 'Personal Driver',
+                    subtitle: 'Coming later — drive your own vehicle.',
+                    isSelected: false,
+                    onTap: () {},
+                  ),
+                ),
               ),
               const Spacer(), // Pushes the button to the bottom
               ElevatedButton(

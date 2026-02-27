@@ -18,9 +18,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _acceptedTerms = false;
 
   void _signUp() {
     if (!_formKey.currentState!.validate()) return;
+    if (!_acceptedTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please accept the Terms & Conditions')),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -129,9 +136,41 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ? 'Minimum 6 characters'
                       : null,
                 ),
-                const SizedBox(height: 35),
+                const SizedBox(height: 20),
 
-                // Button
+                // Terms & Conditions
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Checkbox(
+                        value: _acceptedTerms,
+                        activeColor: AppColors.primary,
+                        onChanged: (val) {
+                          setState(() => _acceptedTerms = val ?? false);
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() => _acceptedTerms = !_acceptedTerms);
+                        },
+                        child: Text(
+                          'I accept the Terms & Conditions. I understand that no prepayment is required for the MVP.',
+                          style: GoogleFonts.manrope(
+                            color: AppColors.textGrey,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 35),
                 SizedBox(
                   width: double.infinity,
                   height: 56,
