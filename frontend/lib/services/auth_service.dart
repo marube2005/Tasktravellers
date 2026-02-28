@@ -157,6 +157,19 @@ class AuthService {
     }
   }
 
+  /// Updates the user's password after they click the reset link in email.
+  Future<void> updatePassword({required String newPassword}) async {
+    try {
+      await _supabaseClient.auth.updateUser(
+        UserAttributes(password: newPassword),
+      );
+    } on AuthException catch (e) {
+      throw Exception('Supabase Auth Error: ${e.message}');
+    } catch (e) {
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
+
   /// =========================================================================
   /// 3. USER MANAGEMENT (Profile Retrieval)
   /// =========================================================================

@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'themes/app_themes.dart';
 import 'pages/splash_screen.dart';
 import 'pages/welcome_screen.dart';
@@ -17,13 +19,47 @@ import 'pages/ride_completion_rating_screen.dart';
 import 'pages/ride_tracking_screen.dart';
 import 'pages/email_verification.dart';
 import 'pages/sacco_dashboard_screen.dart';
+import 'pages/reset_password_screen.dart';
+import 'pages/update_password_screen.dart';
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  late final StreamSubscription<AuthState> _authSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen(
+      (AuthState data) {
+        final event = data.event;
+        if (event == AuthChangeEvent.passwordRecovery) {
+          // User clicked the password reset link in email
+          _navigatorKey.currentState?.pushNamedAndRemoveUntil(
+            '/update_password',
+            (route) => false,
+          );
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _authSubscription.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: _navigatorKey,
       title: 'Travelers App',
       debugShowCheckedModeBanner: false,
 
@@ -52,6 +88,8 @@ class MyApp extends StatelessWidget {
         '/payment': (context) => const PaymentScreen(),
         '/ride-complete': (context) => const RideCompleteScreen(),
         '/live-tracking': (context) => const LiveTrackingScreen(),
+        '/reset_password': (context) => const ResetPasswordScreen(),
+        '/update_password': (context) => const UpdatePasswordScreen(),
       },
     );
   }
