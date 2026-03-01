@@ -1,76 +1,173 @@
 // lib/pages/search_matatus_screen.dart
 import 'package:flutter/material.dart';
 import 'package:frontend/utils/constants.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 // A simple data model for a Matatu
 class Matatu {
+  final String id;
   final String plate;
   final String capacity;
   final String route;
   final bool isAvailable;
   final int price;
-  final String imageUrl;
+  final String? imageUrl;
+  final String? saccoName;
 
   Matatu({
+    required this.id,
     required this.plate,
     required this.capacity,
     required this.route,
     required this.isAvailable,
     required this.price,
-    required this.imageUrl,
+    this.imageUrl,
+    this.saccoName,
   });
+
+  factory Matatu.fromJson(Map<String, dynamic> json) {
+    final sacco = json['sacco'] as Map<String, dynamic>?;
+    return Matatu(
+      id: json['id'] as String? ?? '',
+      plate: json['plate_number'] as String? ?? 'Unknown',
+      capacity: '${json['capacity'] ?? 0} Seater',
+      route: json['route'] as String? ?? 'Unknown route',
+      isAvailable: json['is_available'] as bool? ?? false,
+      price: json['price'] as int? ?? 0,
+      imageUrl: json['image_url'] as String?,
+      saccoName: sacco?['name'] as String?,
+    );
+  }
 }
 
-class MatatuListScreen extends StatelessWidget {
+class MatatuListScreen extends StatefulWidget {
   const MatatuListScreen({super.key});
 
-  // Dummy data for the list
-  static final List<Matatu> _matatus = [
-    Matatu(plate: 'KBC 123A', capacity: '14 Seater', route: 'Nairobi - Nakuru', isAvailable: true, price: 500, imageUrl: 'https://picsum.photos/seed/1/200'),
-    Matatu(plate: 'KDE 456B', capacity: '33 Seater', route: 'Nairobi - Mombasa', isAvailable: true, price: 700, imageUrl: 'https://picsum.photos/seed/2/200'),
-    Matatu(plate: 'KFG 789C', capacity: '14 Seater', route: 'Nairobi - Thika', isAvailable: true, price: 300, imageUrl: 'https://picsum.photos/seed/3/200'),
-    Matatu(plate: 'KGH 012D', capacity: '25 Seater', route: 'Nairobi - Kisumu', isAvailable: false, price: 1200, imageUrl: 'https://picsum.photos/seed/4/200'),
-    Matatu(plate: 'KJL 345E', capacity: '14 Seater', route: 'Nairobi - Machakos', isAvailable: true, price: 450, imageUrl: 'https://picsum.photos/seed/5/200'),
-    Matatu(plate: 'KMN 678F', capacity: '11 Seater', route: 'Nakuru - Naivasha', isAvailable: true, price: 200, imageUrl: 'https://picsum.photos/seed/6/200'),
-  ];
+  @override
+  State<MatatuListScreen> createState() => _MatatuListScreenState();
+}
+
+class _MatatuListScreenState extends State<MatatuListScreen> {
+  List<Matatu> _matatus = [];
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVehicles();
+  }
+
+  Future<void> _loadVehicles() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final response = await Supabase.instance.client
+          .from('vehicles')
+          .select('*, sacco:sacco_id(name, is_verified)')
+          .eq('is_available', true)
+          .order('created_at', ascending: false);
+
+      final List<dynamic> data = response as List<dynamic>;
+      if (mounted) {
+        setState(() {
+          _matatus = data.map((json) => Matatu.fromJson(json as Map<String, dynamic>)).toList();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          // The top app bar
-          SliverAppBar(
-            title: const Text('Travelers App'),
-            leading: const Icon(Icons.directions_bus),
-            actions: [
-              IconButton(icon: const Icon(Icons.search), onPressed: () {}),
-            ],
-            pinned: true,
-            floating: true,
-          ),
-          // The sticky filter bar
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _FilterBarDelegate(),
-          ),
-          // The main list of matatu cards
-          SliverPadding(
-            padding: const EdgeInsets.all(16.0),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 16.0),
-                    child: MatatuCard(matatu: _matatus[index]),
-                  );
-                },
-                childCount: _matatus.length,
-              ),
+      body: RefreshIndicator(
+        onRefresh: _loadVehicles,
+        child: CustomScrollView(
+          slivers: [
+            // The top app bar
+            SliverAppBar(
+              title: const Text('Travelers App'),
+              leading: const Icon(Icons.directions_bus),
+              actions: [
+                IconButton(icon: const Icon(Icons.search), onPressed: () {}),
+                IconButton(icon: const Icon(Icons.refresh), onPressed: _loadVehicles),
+              ],
+              pinned: true,
+              floating: true,
             ),
-          ),
-        ],
+            // The sticky filter bar
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _FilterBarDelegate(),
+            ),
+            // Loading state
+            if (_isLoading)
+              const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator()),
+              )
+            // Error state
+            else if (_error != null)
+              SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                      const SizedBox(height: 16),
+                      Text('Error: $_error'),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadVehicles,
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            // Empty state
+            else if (_matatus.isEmpty)
+              const SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.directions_bus_outlined, size: 64, color: Colors.grey),
+                      SizedBox(height: 16),
+                      Text('No vehicles available', style: TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                ),
+              )
+            // The main list of matatu cards
+            else
+              SliverPadding(
+                padding: const EdgeInsets.all(16.0),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: MatatuCard(matatu: _matatus[index]),
+                      );
+                    },
+                    childCount: _matatus.length,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -154,12 +251,25 @@ class MatatuCard extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(12.0),
-            child: Image.network(
-              matatu.imageUrl,
-              width: 80,
-              height: 80,
-              fit: BoxFit.cover,
-            ),
+            child: matatu.imageUrl != null && matatu.imageUrl!.isNotEmpty
+                ? Image.network(
+                    matatu.imageUrl!,
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stack) => Container(
+                      width: 80,
+                      height: 80,
+                      color: Colors.grey.shade200,
+                      child: const Icon(Icons.directions_bus, size: 40, color: Colors.grey),
+                    ),
+                  )
+                : Container(
+                    width: 80,
+                    height: 80,
+                    color: Colors.grey.shade200,
+                    child: const Icon(Icons.directions_bus, size: 40, color: Colors.grey),
+                  ),
           ),
           const SizedBox(width: 16),
           Expanded(

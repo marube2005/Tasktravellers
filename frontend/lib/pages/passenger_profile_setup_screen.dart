@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../themes/app_colors.dart';
+import '../widgets/avatar_picker.dart';
 
 /// Profile setup screen for Passengers after role selection.
 /// Collects: name (pre-filled), home area, preferred routes, emergency contact.
@@ -22,6 +23,7 @@ class _PassengerProfileSetupScreenState
   final _emergencyNameController = TextEditingController();
   final _emergencyPhoneController = TextEditingController();
   bool _isLoading = false;
+  String? _avatarUrl;
 
   @override
   void initState() {
@@ -47,14 +49,18 @@ class _PassengerProfileSetupScreenState
       final userId = Supabase.instance.client.auth.currentUser?.id;
       if (userId == null) throw Exception('Not authenticated');
 
-      await Supabase.instance.client.from('users').update({
+      final updates = {
         'name': _nameController.text.trim(),
         'home_area': _homeAreaController.text.trim(),
         'preferred_routes': _preferredRoutesController.text.trim(),
         'emergency_contact_name': _emergencyNameController.text.trim(),
         'emergency_contact_phone': _emergencyPhoneController.text.trim(),
         'role': 'passenger',
-      }).eq('id', userId);
+      };
+      if (_avatarUrl != null) {
+        updates['avatar_url'] = _avatarUrl!;
+      }
+      await Supabase.instance.client.from('users').update(updates).eq('id', userId);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -124,6 +130,28 @@ class _PassengerProfileSetupScreenState
                   ),
                 ),
                 const SizedBox(height: 32),
+
+                // Avatar picker
+                Center(
+                  child: AvatarPicker(
+                    currentAvatarUrl: _avatarUrl,
+                    storagePath: Supabase.instance.client.auth.currentUser?.id ?? 'unknown',
+                    onUploaded: (url) {
+                      setState(() => _avatarUrl = url);
+                    },
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Center(
+                  child: Text(
+                    'Tap to add profile photo',
+                    style: GoogleFonts.manrope(
+                      color: AppColors.textGrey,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 28),
 
                 // Name
                 _buildLabel('Full Name'),

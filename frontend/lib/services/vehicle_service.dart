@@ -24,6 +24,7 @@ class VehicleService {
     required String plateNumber,
     required int capacity,
     required String route,
+    String? imageUrl,
   }) async {
     final saccoId = _currentUserId;
     if (saccoId == null) {
@@ -31,13 +32,17 @@ class VehicleService {
     }
 
     try {
-      await _supabaseClient.from('vehicles').insert({
+      final data = <String, dynamic>{
         'sacco_id': saccoId,
         'plate_number': plateNumber,
         'capacity': capacity,
         'route': route,
         'is_available': true, // Default to available upon creation
-      });
+      };
+      if (imageUrl != null) {
+        data['image_url'] = imageUrl;
+      }
+      await _supabaseClient.from('vehicles').insert(data);
     } on PostgrestException catch (e) {
       if (e.code == '23505') {
         throw Exception('A vehicle with this plate number already exists.');
@@ -76,6 +81,7 @@ class VehicleService {
     String? plateNumber,
     int? capacity,
     String? route,
+    String? imageUrl,
   }) async {
     final saccoId = _currentUserId;
     if (saccoId == null) {
@@ -86,6 +92,7 @@ class VehicleService {
     if (plateNumber != null) updates['plate_number'] = plateNumber;
     if (capacity != null) updates['capacity'] = capacity;
     if (route != null) updates['route'] = route;
+    if (imageUrl != null) updates['image_url'] = imageUrl;
 
     if (updates.isEmpty) return;
     

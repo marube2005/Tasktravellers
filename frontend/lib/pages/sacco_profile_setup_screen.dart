@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../themes/app_colors.dart';
+import '../widgets/avatar_picker.dart';
 
 /// Profile setup screen for Sacco operators after role selection.
 /// Collects: sacco name, NTSA license number, fleet size, contact details.
@@ -22,6 +23,7 @@ class _SaccoProfileSetupScreenState extends State<SaccoProfileSetupScreen> {
   final _contactPhoneController = TextEditingController();
   final _contactEmailController = TextEditingController();
   bool _isLoading = false;
+  String? _logoUrl;
 
   @override
   void initState() {
@@ -48,13 +50,17 @@ class _SaccoProfileSetupScreenState extends State<SaccoProfileSetupScreen> {
       if (userId == null) throw Exception('Not authenticated');
 
       // Update user role to sacco
-      await Supabase.instance.client.from('users').update({
+      final userUpdates = <String, dynamic>{
         'name': _contactNameController.text.trim(),
         'role': 'sacco',
-      }).eq('id', userId);
+      };
+      if (_logoUrl != null) {
+        userUpdates['avatar_url'] = _logoUrl!;
+      }
+      await Supabase.instance.client.from('users').update(userUpdates).eq('id', userId);
 
       // Insert sacco profile details
-      await Supabase.instance.client.from('sacco_profiles').upsert({
+      final saccoData = <String, dynamic>{
         'user_id': userId,
         'sacco_name': _saccoNameController.text.trim(),
         'ntsa_license': _ntsaLicenseController.text.trim(),
@@ -63,7 +69,11 @@ class _SaccoProfileSetupScreenState extends State<SaccoProfileSetupScreen> {
         'contact_phone': _contactPhoneController.text.trim(),
         'contact_email': _contactEmailController.text.trim(),
         'verification_status': 'pending',
-      });
+      };
+      if (_logoUrl != null) {
+        saccoData['logo_url'] = _logoUrl!;
+      }
+      await Supabase.instance.client.from('sacco_profiles').upsert(saccoData);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -134,6 +144,28 @@ class _SaccoProfileSetupScreenState extends State<SaccoProfileSetupScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
+
+                // Logo/Avatar picker
+                Center(
+                  child: AvatarPicker(
+                    currentAvatarUrl: _logoUrl,
+                    storagePath: 'sacco_${Supabase.instance.client.auth.currentUser?.id ?? "unknown"}',
+                    onUploaded: (url) {
+                      setState(() => _logoUrl = url);
+                    },
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Center(
+                  child: Text(
+                    'Tap to add Sacco logo',
+                    style: GoogleFonts.manrope(
+                      color: AppColors.textGrey,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 28),
 
                 // Sacco details section
                 _sectionHeader('Sacco Information', Icons.business_outlined),

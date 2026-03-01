@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:geolocator/geolocator.dart';
 import '../themes/app_colors.dart';
+import '../services/location_service.dart';
 
 /// Permissions prompt screen — requests location access and notification
 /// permissions before entering the main app.
@@ -14,18 +16,72 @@ class PermissionsScreen extends StatefulWidget {
 class _PermissionsScreenState extends State<PermissionsScreen> {
   bool _locationGranted = false;
   bool _notificationsGranted = false;
+  bool _locationDeniedForever = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkExistingPermissions();
+  }
+
+  Future<void> _checkExistingPermissions() async {
+    // Check if location is already granted
+    final permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.always ||
+        permission == LocationPermission.whileInUse) {
+      setState(() => _locationGranted = true);
+    } else if (permission == LocationPermission.deniedForever) {
+      setState(() => _locationDeniedForever = true);
+    }
+  }
 
   Future<void> _requestLocation() async {
-    // In production: use permission_handler or geolocator package
-    // final status = await Permission.locationWhenInUse.request();
-    // For now, simulate granting
-    await Future.delayed(const Duration(milliseconds: 500));
+    final permission = await LocationService().requestPermission();
+    
     if (mounted) {
-      setState(() => _locationGranted = true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Location access granted')),
-      );
+      if (permission == LocationPermission.always ||
+          permission == LocationPermission.whileInUse) {
+        setState(() {
+          _locationGranted = true;
+          _locationDeniedForever = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Location access granted')),
+        );
+      } else if (permission == LocationPermission.deniedForever) {
+        setState(() => _locationDeniedForever = true);
+        _showSettingsDialog();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Location permission denied')),
+        );
+      }
     }
+  }
+
+  void _showSettingsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Location Permission'),
+        content: const Text(
+          'Location permission is permanently denied. Please enable it in app settings to use ride tracking features.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              LocationService().openAppSettings();
+            },
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _requestNotifications() async {

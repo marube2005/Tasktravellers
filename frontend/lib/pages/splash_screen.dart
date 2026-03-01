@@ -46,7 +46,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
       final role = profile['role'] as String?;
 
-      if (role == 'sacco') {
+      if (role == 'admin') {
+        Navigator.pushReplacementNamed(context, '/admin-verification-review');
+      } else if (role == 'sacco') {
         Navigator.pushReplacementNamed(context, '/sacco-dashboard');
       } else {
         // Default to passenger dashboard

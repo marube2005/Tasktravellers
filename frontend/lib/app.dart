@@ -11,6 +11,7 @@ import 'pages/phone_login_screen.dart';
 import 'pages/passenger_profile_setup_screen.dart';
 import 'pages/sacco_profile_setup_screen.dart';
 import 'pages/sacco_verification_screen.dart';
+import 'pages/admin_verification_review_screen.dart';
 import 'pages/permissions_screen.dart';
 import 'pages/passenger_dashboard_screen.dart';
 import 'pages/search_matatus_screen.dart';
@@ -90,6 +91,7 @@ class _MyAppState extends State<MyApp> {
         '/live-tracking': (context) => const LiveTrackingScreen(),
         '/reset_password': (context) => const ResetPasswordScreen(),
         '/update_password': (context) => const UpdatePasswordScreen(),
+        '/admin-verification-review': (context) => const AdminVerificationReviewScreen(),
       },
     );
   }

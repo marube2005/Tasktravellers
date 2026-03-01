@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:file_picker/file_picker.dart';
 import '../themes/app_colors.dart';
 
 /// Sacco document upload and verification status screen.
@@ -57,21 +59,49 @@ class _SaccoVerificationScreenState extends State<SaccoVerificationScreen> {
   }
 
   Future<void> _uploadDocument(String docType) async {
-    // In a real app, use file_picker or image_picker to select a file,
-    // then upload to Supabase Storage.
-    // For now, simulate the upload.
-    setState(() => _isLoading = true);
-
     try {
-      // Simulated delay
-      await Future.delayed(const Duration(seconds: 1));
+      // Pick file using file_picker
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+        withData: true, // Required for web
+      );
+
+      if (result == null || result.files.isEmpty) {
+        return; // User cancelled
+      }
+
+      setState(() => _isLoading = true);
 
       final userId = Supabase.instance.client.auth.currentUser?.id;
       if (userId == null) throw Exception('Not authenticated');
 
-      // In production: pick file, upload to storage, save URL
-      final fakeUrl = 'https://storage.example.com/$userId/$docType.pdf';
+      final file = result.files.first;
+      final fileExt = file.extension ?? 'pdf';
+      final fileName = '${userId}_${docType}_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+      final storagePath = 'sacco_documents/$userId/$fileName';
 
+      // Upload to Supabase Storage
+      final bytes = file.bytes;
+      if (bytes == null) throw Exception('Could not read file');
+
+      await Supabase.instance.client.storage
+          .from('sacco-documents')
+          .uploadBinary(
+            storagePath,
+            bytes,
+            fileOptions: FileOptions(
+              contentType: _getContentType(fileExt),
+              upsert: true,
+            ),
+          );
+
+      // Get the public URL
+      final publicUrl = Supabase.instance.client.storage
+          .from('sacco-documents')
+          .getPublicUrl(storagePath);
+
+      // Update the database with the file URL
       final updateField = {
         'ntsa_cert': 'ntsa_cert_url',
         'sacco_reg': 'sacco_reg_url',
@@ -80,25 +110,25 @@ class _SaccoVerificationScreenState extends State<SaccoVerificationScreen> {
 
       await Supabase.instance.client
           .from('sacco_profiles')
-          .update({updateField: fakeUrl}).eq('user_id', userId);
+          .update({updateField: publicUrl}).eq('user_id', userId);
 
       if (mounted) {
         setState(() {
           switch (docType) {
             case 'ntsa_cert':
-              _ntsaCertFile = fakeUrl;
+              _ntsaCertFile = publicUrl;
               break;
             case 'sacco_reg':
-              _saccoRegFile = fakeUrl;
+              _saccoRegFile = publicUrl;
               break;
             case 'kra_pin':
-              _kraPinFile = fakeUrl;
+              _kraPinFile = publicUrl;
               break;
           }
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${_docLabel(docType)} uploaded')),
+          SnackBar(content: Text('${_docLabel(docType)} uploaded successfully')),
         );
       }
     } catch (e) {
@@ -108,6 +138,20 @@ class _SaccoVerificationScreenState extends State<SaccoVerificationScreen> {
           SnackBar(content: Text('Upload failed: $e')),
         );
       }
+    }
+  }
+
+  String _getContentType(String extension) {
+    switch (extension.toLowerCase()) {
+      case 'pdf':
+        return 'application/pdf';
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      default:
+        return 'application/octet-stream';
     }
   }
 
