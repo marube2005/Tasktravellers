@@ -73,7 +73,9 @@ class _SaccoProfileSetupScreenState extends State<SaccoProfileSetupScreen> {
       if (_logoUrl != null) {
         saccoData['logo_url'] = _logoUrl!;
       }
-      await Supabase.instance.client.from('sacco_profiles').upsert(saccoData);
+        await Supabase.instance.client
+          .from('sacco_profiles')
+          .upsert(saccoData, onConflict: 'user_id');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -84,7 +86,7 @@ class _SaccoProfileSetupScreenState extends State<SaccoProfileSetupScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          const SnackBar(content: Text('Unable to save Sacco profile right now.')),
         );
         setState(() => _isLoading = false);
       }

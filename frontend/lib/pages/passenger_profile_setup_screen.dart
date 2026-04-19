@@ -60,7 +60,25 @@ class _PassengerProfileSetupScreenState
       if (_avatarUrl != null) {
         updates['avatar_url'] = _avatarUrl!;
       }
-      await Supabase.instance.client.from('users').update(updates).eq('id', userId);
+      final client = Supabase.instance.client;
+
+      try {
+        await client.from('users').update(updates).eq('id', userId);
+      } on PostgrestException catch (e) {
+        // If optional columns are missing in an older DB schema, save core profile fields.
+        if (e.code == 'PGRST204') {
+          final coreUpdates = <String, dynamic>{
+            'name': _nameController.text.trim(),
+            'role': 'passenger',
+          };
+          if (_avatarUrl != null) {
+            coreUpdates['avatar_url'] = _avatarUrl!;
+          }
+          await client.from('users').update(coreUpdates).eq('id', userId);
+        } else {
+          rethrow;
+        }
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -68,10 +86,20 @@ class _PassengerProfileSetupScreenState
         );
         Navigator.pushReplacementNamed(context, '/permissions');
       }
+    } on PostgrestException catch (e) {
+      if (mounted) {
+        final message = e.code == 'PGRST204'
+            ? 'Your profile was partially saved. Please apply the latest database migrations.'
+            : 'Unable to save profile right now. Please try again.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        setState(() => _isLoading = false);
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving profile: $e')),
+          const SnackBar(content: Text('Unable to save profile right now.')),
         );
         setState(() => _isLoading = false);
       }

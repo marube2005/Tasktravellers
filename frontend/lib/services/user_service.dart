@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/user.dart';
 import '../models/user_role.dart'; // Assuming you have the UserRole enum defined
 
 /// A service class to handle user profile data and related entities (like vehicles).
@@ -18,11 +19,9 @@ class UserService {
   // Helper to fetch the current user's role from the local session/state if available
   // For safety, the public profile fetch should confirm the role from the DB.
   Future<UserRole?> _getCurrentUserRole() async {
-    // A robust app might cache the user profile, but here we fetch the role
-    // directly from the DB for accuracy.
-    final profile = await fetchCurrentUserProfile();
-    if (profile != null && profile.containsKey('role')) {
-      return userRoleFromString(profile['role'] as String);
+    final profile = await fetchCurrentUserProfileModel();
+    if (profile != null) {
+      return userRoleFromString(profile.role);
     }
     return null;
   }
@@ -32,7 +31,7 @@ class UserService {
   // =========================================================================
 
   /// Fetches the current authenticated user's profile from the 'users' table.
-  Future<Map<String, dynamic>?> fetchCurrentUserProfile() async {
+  Future<AppUser?> fetchCurrentUserProfileModel() async {
     final userId = _currentUserId;
     if (userId == null) {
       return null;
@@ -45,17 +44,23 @@ class UserService {
           .eq('id', userId)
           .single();
 
-      return profile;
+      return AppUser.fromMap(profile);
     } on PostgrestException catch (e) {
       // PGRST116 means 'No rows found', which should only happen if the
       // profile creation step after sign-up failed.
       if (e.code == 'PGRST116') {
         return null; 
       }
-      throw Exception('Database Error fetching profile: ${e.message}');
+      throw Exception('Unable to load profile right now.');
     } catch (e) {
-      throw Exception('An unexpected error occurred while fetching profile: $e');
+      throw Exception('Unable to load profile right now.');
     }
+  }
+
+  /// Backward-compatible map-based profile fetch for older callers.
+  Future<Map<String, dynamic>?> fetchCurrentUserProfile() async {
+    final profile = await fetchCurrentUserProfileModel();
+    return profile?.toMap();
   }
 
   /// Updates specific fields on the current user's profile.
@@ -81,10 +86,10 @@ class UserService {
           .update(updates)
           .eq('id', userId);
           
-    } on PostgrestException catch (e) {
-      throw Exception('Database Error updating profile: ${e.message}');
+    } on PostgrestException {
+      throw Exception('Unable to update profile right now.');
     } catch (e) {
-      throw Exception('An unexpected error occurred while updating profile: $e');
+      throw Exception('Unable to update profile right now.');
     }
   }
 
@@ -122,9 +127,9 @@ class UserService {
       if (e.code == '23505') { // Unique violation for plate_number
         throw Exception('A vehicle with this plate number already exists.');
       }
-      throw Exception('Database Error adding vehicle: ${e.message}');
+      throw Exception('Unable to add vehicle right now.');
     } catch (e) {
-      throw Exception('An unexpected error occurred while adding the vehicle: $e');
+      throw Exception('Unable to add vehicle right now.');
     }
   }
   
@@ -148,10 +153,10 @@ class UserService {
           .order('plate_number', ascending: true);
           
       return vehicles;
-    } on PostgrestException catch (e) {
-      throw Exception('Database Error fetching vehicles: ${e.message}');
+    } on PostgrestException {
+      throw Exception('Unable to load vehicles right now.');
     } catch (e) {
-      throw Exception('An unexpected error occurred while fetching vehicles: $e');
+      throw Exception('Unable to load vehicles right now.');
     }
   }
   
@@ -173,10 +178,10 @@ class UserService {
           .eq('id', vehicleId)
           .eq('sacco_id', saccoId);
 
-    } on PostgrestException catch (e) {
-      throw Exception('Database Error updating vehicle availability: ${e.message}');
+    } on PostgrestException {
+      throw Exception('Unable to update vehicle availability right now.');
     } catch (e) {
-      throw Exception('An unexpected error occurred while updating availability: $e');
+      throw Exception('Unable to update vehicle availability right now.');
     }
   }
 }

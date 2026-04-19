@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Flutter (Chrome) with .env defines",
+      "request": "launch",
+      "type": "dart",
+      "program": "frontend/lib/main.dart",
+      "cwd": "frontend",
+      "toolArgs": [
+        "--dart-define-from-file=.env"
+      ],
+      "deviceId": "chrome"
+    }
+  ]
+}

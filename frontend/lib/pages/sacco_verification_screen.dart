@@ -186,7 +186,7 @@ class _SaccoVerificationScreenState extends State<SaccoVerificationScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          const SnackBar(content: Text('Unable to submit verification right now.')),
         );
       }
     }

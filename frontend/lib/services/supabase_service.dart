@@ -1,6 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart'; // For kIsWeb
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+const String _supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+const String _supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
 /// A central service class for initializing and providing access to the Supabase client.
 /// Use this service before any other service (Auth, Ride, etc.) is instantiated.
@@ -27,23 +29,19 @@ class SupabaseService {
   // INITIALIZATION
   // =========================================================================
 
-  /// Initializes the Supabase client with credentials from the .env file.
-  /// This must be called once at the start of the application, after dotenv.load().
+  /// Initializes the Supabase client with compile-time `--dart-define` values.
   Future<void> initialize() async {
-    final supabaseUrl = dotenv.env['SUPABASE_URL'];
-    final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'];
-
-    if (supabaseUrl == null || supabaseUrl.isEmpty) {
-      throw Exception('SUPABASE_URL is not set in .env file.');
+    if (_supabaseUrl.isEmpty) {
+      throw Exception('SUPABASE_URL is not set via --dart-define.');
     }
-    if (supabaseAnonKey == null || supabaseAnonKey.isEmpty) {
-      throw Exception('SUPABASE_ANON_KEY is not set in .env file.');
+    if (_supabaseAnonKey.isEmpty) {
+      throw Exception('SUPABASE_ANON_KEY is not set via --dart-define.');
     }
     
     try {
       await Supabase.initialize(
-        url: supabaseUrl,
-        anonKey: supabaseAnonKey,
+        url: _supabaseUrl,
+        anonKey: _supabaseAnonKey,
         debug: kDebugMode, // Enable Supabase logging in debug mode
         authOptions: const FlutterAuthClientOptions(
           authFlowType: AuthFlowType.pkce, // Recommended for mobile and web

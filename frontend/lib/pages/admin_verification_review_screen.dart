@@ -95,7 +95,7 @@ class _AdminVerificationReviewScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          const SnackBar(content: Text('Unable to update verification status right now.')),
         );
       }
     }
@@ -121,7 +121,7 @@ class _AdminVerificationReviewScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          const SnackBar(content: Text('Unable to update verification status right now.')),
         );
       }
     }
