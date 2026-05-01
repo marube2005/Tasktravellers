@@ -14,11 +14,7 @@ class PaymentService {
   Future<void> initiatePayment({
     required String rideId,
     required double amount,
-    required String phoneNumber,
-    required String customerName,
   }) async {
-    // phoneNumber/customerName are intentionally not used in client-side code.
-    // The edge function resolves secure payment details server-side.
     await _transactionService.initiatePayment(rideId: rideId, amount: amount);
   }
 

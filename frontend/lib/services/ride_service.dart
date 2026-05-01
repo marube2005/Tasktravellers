@@ -34,10 +34,12 @@ class RideService {
   // Helper to get the current authenticated user's ID
   String? get _currentUserId => _supabaseClient.auth.currentUser?.id;
   
-  // Helper to generate a unique invite link
+  // Helper to generate a universal HTTPS invite link that works across all
+  // platforms (Android, iOS, and web). Configure universal-link / app-link
+  // handling in your server or Firebase Dynamic Links to deep-link into the app.
   String _generateInviteLink() {
-    // Generate a simple unique string for the link
-    return 'travelers-app://ride/${const Uuid().v4().substring(0, 8)}';
+    final token = const Uuid().v4().substring(0, 8);
+    return 'https://travelersapp.co.ke/join/$token';
   }
 
   /// =========================================================================
@@ -70,6 +72,7 @@ class RideService {
             'estimated_fare': estimatedFare,
             'invite_link': inviteLink,
             'status': RideStatus.open.toShortString(),
+            'creator_id': passengerId,
           })
       .select()
       .single();
@@ -115,6 +118,8 @@ class RideService {
 
   /// Allows a Sacco to accept an open ride request.
   /// This links the ride to the Sacco and one of their vehicles.
+  ///
+  /// Throws [RideAlreadyAcceptedException] if another Sacco accepted first.
   Future<void> acceptRide({
     required String rideId,
     required String vehicleId,
@@ -122,21 +127,29 @@ class RideService {
     required double confirmedFare,
   }) async {
     try {
-      await _supabaseClient
+      // Conditional update: only succeeds if the ride is still 'open'.
+      // Selecting back the row lets us detect whether the update actually matched.
+      final List<dynamic> updated = await _supabaseClient
           .from('rides')
           .update({
             'status': RideStatus.accepted.toShortString(),
             'provider_id': saccoId,
             'vehicle_id': vehicleId,
-            'estimated_fare': confirmedFare, // Final confirmation of the fare
+            'estimated_fare': confirmedFare,
           })
           .eq('id', rideId)
-          .eq('status', RideStatus.open.toShortString()); // Only update if still open
+          .eq('status', RideStatus.open.toShortString())
+          .select('id');
 
+      if (updated.isEmpty) {
+        throw Exception(
+          'This ride is no longer available. Another sacco may have accepted it first.',
+        );
+      }
     } on PostgrestException catch (e) {
       throw Exception('Database Error accepting ride: ${e.message}');
     } catch (e) {
-      throw Exception('An unexpected error occurred while accepting the ride: $e');
+      rethrow;
     }
   }
   

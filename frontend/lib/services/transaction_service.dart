@@ -15,11 +15,19 @@ extension TransactionStatusExtension on TransactionStatus {
   }
 }
 
-/// A service class to handle payment processing, commission calculation,
-/// and transaction recording using PayHero (simulated via Edge Function).
+/// A service class to handle payment processing and transaction recording
+/// using PayHero (simulated via Edge Function).
+///
+/// Commission calculation is enforced server-side by the database trigger
+/// `trg_transactions_commission`. The constant below is kept only for
+/// display purposes in the UI so the user can see the expected breakdown
+/// before confirming payment.
 class TransactionService {
   final SupabaseClient _supabaseClient = Supabase.instance.client;
-  static const double _commissionRate = 0.05; // 5% commission
+
+  /// Display-only commission rate. The authoritative calculation happens in the
+  /// DB trigger and cannot be overridden by client code.
+  static const double commissionRate = 0.05;
 
   /// Private constructor for Singleton pattern.
   TransactionService._internal();
@@ -55,8 +63,8 @@ class TransactionService {
       throw Exception('Payment amount must be greater than zero.');
     }
 
-    // Commission is calculated on the total amount
-    final commission = amount * _commissionRate; 
+    // Commission shown to the user for display; the DB trigger recalculates it.
+    final commission = amount * commissionRate;
     final totalAmount = amount; 
 
     // 1. Create a unique, preliminary transaction ID
@@ -99,36 +107,15 @@ class TransactionService {
     }
   }
   
-  /// =========================================================================
-  /// 2. TRANSACTION STATUS UPDATE (Called by Webhook/Admin)
-  /// =========================================================================
-  
-  /// Updates the status of an existing transaction based on PayHero's confirmation.
-  /// In a real application, this is usually called by a **Supabase Webhook/Edge Function**
-  /// after receiving a success/failure notification from PayHero.
-  Future<void> updateTransactionStatus({
-    required String provisionalTxId,
-    required TransactionStatus newStatus,
-    String? finalPayheroTxId, // The official transaction ID if successful
-  }) async {
-    try {
-      final updateData = {
-        'status': newStatus.toShortString(),
-        // Only update the final PayHero ID if provided (i.e., on success)
-        if (finalPayheroTxId != null) 'payhero_tx_id': finalPayheroTxId, 
-      };
-      
-      await _supabaseClient
-          .from('transactions')
-          .update(updateData)
-          .eq('payhero_tx_id', provisionalTxId); // Update using the unique ID
-          
-    } on PostgrestException catch (e) {
-      throw Exception('Database Error updating transaction status: ${e.message}');
-    } catch (e) {
-      throw Exception('An unexpected error occurred while updating status: $e');
-    }
-  }
+  // =========================================================================
+  // NOTE: updateTransactionStatus has been intentionally removed from the
+  // client-side API.
+  //
+  // Transaction status (pending → completed / failed) must ONLY be updated by
+  // the PayHero webhook via a Supabase Edge Function running with the service
+  // role key.  The database RLS policy "Transactions: admin update only" blocks
+  // all direct status updates by regular authenticated users.
+  // =========================================================================
 
   /// =========================================================================
   /// 3. TRANSACTION QUERIES (PASSENGER & SACCO VIEWS)

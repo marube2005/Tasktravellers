@@ -36,8 +36,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
           email: _emailController.text,
           phone: _phoneController.text,
           password: _passwordController.text,
-          context: context, // optional, for snackbars & navigation
         )
+        .then((_) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Signup successful! Check your email to verify.'),
+            ),
+          );
+          Navigator.pushReplacementNamed(context, '/email_verification');
+        })
+        .catchError((Object e) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                e.toString().replaceFirst('Exception: ', ''),
+              ),
+            ),
+          );
+        })
         .whenComplete(() {
           if (mounted) setState(() => _isLoading = false);
         });
