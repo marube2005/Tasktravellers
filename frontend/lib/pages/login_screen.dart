@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart'; // ✅ make sure the path matches your project structure
+import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,15 +20,29 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await AuthService().loginUser(
+      final result = await AuthService().loginUser(
         _emailController.text.trim(),
         _passwordController.text.trim(),
-        context,
       );
+
+      if (!mounted) return;
+
+      if (result == LoginResult.emailNotVerified) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please verify your email before logging in.'),
+          ),
+        );
+        Navigator.pushReplacementNamed(context, '/email_verification');
+      } else {
+        Navigator.pushReplacementNamed(context, '/role-selection');
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login failed: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

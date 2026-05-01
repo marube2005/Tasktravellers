@@ -29,15 +29,23 @@ class BookingService {
     }
 
     try {
-      // 1. Check if the ride is still 'open' (optional but good practice)
+      // 1. Check if the ride is still 'open' and has capacity.
       final Map<String, dynamic> ride = await _supabaseClient
           .from('rides')
-          .select('status')
+          .select('status, group_size')
           .eq('id', rideId)
           .single();
 
       if (ride['status'] != 'open') {
         throw Exception('Ride is not open for new bookings.');
+      }
+
+      // Client-side capacity guard. The server-side trigger is the authoritative
+      // check, but an early client check gives a clearer error message.
+      final int groupSize = (ride['group_size'] as int?) ?? 0;
+      final int currentCount = await getRidePassengerCount(rideId: rideId);
+      if (currentCount >= groupSize) {
+        throw Exception('Ride is full. Maximum capacity of $groupSize passengers reached.');
       }
 
       // 2. Insert the booking record

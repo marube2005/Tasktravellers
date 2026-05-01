@@ -1,7 +1,17 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+/// Outcome of a successful [AuthService.loginUser] call.
+/// The caller is responsible for navigating and showing feedback.
+enum LoginResult {
+  /// Authentication succeeded and email is verified.
+  success,
+
+  /// Authentication succeeded but the email address has not yet been confirmed.
+  /// The user has been signed out automatically.
+  emailNotVerified,
+}
 
 /// A service class to handle all Supabase Authentication logic.
 class AuthService {
@@ -23,77 +33,43 @@ class AuthService {
   /// 2. PUBLIC METHODS
   /// =========================================================================
 
-  /// Registers a new user with an email and password, and inserts their profile
-  /// into the 'users' table with the specified role.
+  /// Registers a new user with an email and password.
   ///
-  /// *NOTE: The MVP specifies Phone/OTP. Supabase supports this via
-  /// 'signUp(phone: ..., password: ...)' or 'signInWithOtp(phone: ...)'
-  /// depending on your flow. For simplicity and standard practice, Email/Password
-  /// is shown, as the phone flow requires a separate package or backend logic
-  /// for OTP verification in the client-side unless using 'signInWithOtp'.
+  /// Throws an [Exception] on failure. On success the caller should show a
+  /// confirmation message and navigate to '/email_verification'.
+  ///
+  /// NOTE: The MVP specifies Phone/OTP. Supabase supports this via
+  /// 'signInWithOtp(phone: ...)'. Email/Password is used here for simplicity;
+  /// the phone flow requires additional backend OTP handling.
   Future<void> signUpUser({
     required String name,
     required String email,
     required String phone,
     required String password,
-    BuildContext? context, // optional, only if you want snackbars
   }) async {
     try {
-      final supabase = Supabase.instance.client;
-
-      final authResponse = await supabase.auth.signUp(
+      final authResponse = await _supabaseClient.auth.signUp(
         email: email.trim(),
         password: password.trim(),
         data: {'name': name.trim(), 'phone': phone.trim()},
       );
 
       final user = authResponse.user;
-      if (user == null) throw Exception("Signup failed.");
-
-      // Optionally insert into 'users' table if you don't use RLS triggers
-      // await supabase.from('users').insert({
-      //   'id': user.id,
-      //   'name': name,
-      //   'email': email,
-      //   'phone': phone,
-      //   'role': 'passenger',
-      // });
-
-      if (context != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Signup successful! Check your email to verify.'),
-          ),
-        );
-        Navigator.pushReplacementNamed(context, '/email_verification');
-      }
+      if (user == null) throw Exception('Signup failed.');
     } on AuthException catch (e) {
-      if (context != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
-      }
       throw Exception('Supabase Auth Error: ${e.message}');
     } catch (e) {
-      if (context != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
-      }
       throw Exception('Unexpected signup error: $e');
     }
   }
 
   /// Logs in a user using email and password.
-  Future<void> loginUser(
-    String email,
-    String password,
-    BuildContext context,
-  ) async {
+  ///
+  /// Returns a [LoginResult] indicating what the caller should do next.
+  /// Throws an [Exception] on authentication failure.
+  Future<LoginResult> loginUser(String email, String password) async {
     try {
-      final supabase = Supabase.instance.client;
-
-      final response = await supabase.auth.signInWithPassword(
+      final response = await _supabaseClient.auth.signInWithPassword(
         email: email.trim(),
         password: password.trim(),
       );
@@ -101,32 +77,17 @@ class AuthService {
       final user = response.user;
       if (user == null) throw Exception('User not found.');
 
-      // 🔍 Check if verified
       if (user.emailConfirmedAt == null) {
-        // Sign them out immediately
-        await supabase.auth.signOut();
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please verify your email before logging in.'),
-          ),
-        );
-
-        // Redirect to verification screen
-        Navigator.pushReplacementNamed(context, '/email_verification');
-        return;
+        // Sign the user out immediately so the session is not kept.
+        await _supabaseClient.auth.signOut();
+        return LoginResult.emailNotVerified;
       }
 
-      // ✅ Continue to role selection if verified
-      Navigator.pushReplacementNamed(context, '/role-selection');
+      return LoginResult.success;
     } on AuthException catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      throw Exception(e.message);
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      throw Exception('Login error: $e');
     }
   }
 
