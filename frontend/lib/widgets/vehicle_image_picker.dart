@@ -126,7 +126,7 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
           color: Colors.grey.shade100,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             width: 2,
           ),
           image: _imageUrl != null && _imageUrl!.isNotEmpty
@@ -162,7 +162,7 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
             if (_isUploading)
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Center(
@@ -180,7 +180,7 @@ class _VehicleImagePickerState extends State<VehicleImagePicker> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),

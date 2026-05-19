@@ -128,7 +128,7 @@ class _AvatarPickerState extends State<AvatarPicker> {
               shape: BoxShape.circle,
               color: Colors.grey.shade200,
               border: Border.all(
-                color: AppColors.primary.withOpacity(0.3),
+                color: AppColors.primary.withValues(alpha: 0.3),
                 width: 3,
               ),
               image: _avatarUrl != null && _avatarUrl!.isNotEmpty
@@ -151,7 +151,7 @@ class _AvatarPickerState extends State<AvatarPicker> {
               child: Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withValues(alpha: 0.5),
                 ),
                 child: const Center(
                   child: CircularProgressIndicator(color: Colors.white),

@@ -72,7 +72,7 @@ class _SummarySection extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Container(
@@ -136,7 +136,7 @@ class _MpesaCard extends StatelessWidget {
         color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
         borderRadius: BorderRadius.circular(12.0),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)
         ],
       ),
       child: Row(

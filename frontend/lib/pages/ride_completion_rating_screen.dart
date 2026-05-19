@@ -23,8 +23,8 @@ class _RideCompleteScreenState extends State<RideCompleteScreen> {
   void _submitRating() {
     if (_rating > 0) {
       // Handle the submission logic here
-      print('Rating: $_rating stars');
-      print('Feedback: ${_feedbackController.text}');
+      debugPrint('Rating: $_rating stars');
+      debugPrint('Feedback: ${_feedbackController.text}');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Thank you for your feedback!')),
       );

@@ -1,19 +1,13 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart'; // For kIsWeb
-
-const String _supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-const String _supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+import 'dart:io' show File;
 
 /// A central service class for initializing and providing access to the Supabase client.
 /// Use this service before any other service (Auth, Ride, etc.) is instantiated.
 class SupabaseService {
   late final SupabaseClient _supabaseClient;
-  
-  // Custom deep link redirect URL for mobile auth flows (e.g., magic links, password reset)
-  // Ensure this is configured in your Supabase Auth settings and your Flutter app's manifest/plist.
-  static const String _authRedirectUrl = kIsWeb
-      ? '' // Not strictly needed for web/desktop unless using advanced flows
-      : 'io.supabase.travelersapp://login-callback/'; 
+  late String _supabaseUrl;
+  late String _supabaseAnonKey;
 
   /// Private constructor for Singleton pattern.
   SupabaseService._internal();
@@ -29,16 +23,80 @@ class SupabaseService {
   // INITIALIZATION
   // =========================================================================
 
-  /// Initializes the Supabase client with compile-time `--dart-define` values.
-  Future<void> initialize() async {
-    if (_supabaseUrl.isEmpty) {
-      throw Exception('SUPABASE_URL is not set via --dart-define.');
-    }
-    if (_supabaseAnonKey.isEmpty) {
-      throw Exception('SUPABASE_ANON_KEY is not set via --dart-define.');
-    }
-    
+  /// Loads credentials from the .env file (mobile/desktop only).
+  Future<void> _loadEnvCredentialsFromFile() async {
     try {
+      // Get the .env file path (assuming it's in the project root)
+      final envFile = File('.env');
+      
+      if (!await envFile.exists()) {
+        throw Exception('.env file not found. Please create one with SUPABASE_URL and SUPABASE_ANON_KEY.');
+      }
+      
+      final envContent = await envFile.readAsString();
+      final lines = envContent.split('\n');
+      
+      for (final line in lines) {
+        final trimmedLine = line.trim();
+        if (trimmedLine.isEmpty || trimmedLine.startsWith('#')) {
+          continue; // Skip empty lines and comments
+        }
+        
+        if (trimmedLine.startsWith('SUPABASE_URL=')) {
+          _supabaseUrl = trimmedLine.split('=').last;
+        } else if (trimmedLine.startsWith('SUPABASE_ANON_KEY=')) {
+          _supabaseAnonKey = trimmedLine.split('=').last;
+        }
+      }
+      
+      debugPrint('Credentials loaded from .env file successfully.');
+    } catch (e) {
+      debugPrint('Error loading .env credentials: $e');
+      rethrow;
+    }
+  }
+
+  /// Loads credentials from compile-time environment variables (web).
+  void _loadEnvCredentialsFromDefines() {
+    try {
+      _supabaseUrl = const String.fromEnvironment('SUPABASE_URL');
+      _supabaseAnonKey = const String.fromEnvironment('SUPABASE_ANON_KEY');
+      
+      debugPrint('Web credentials - URL: ${_supabaseUrl.isNotEmpty ? 'SET' : 'EMPTY'}, Key: ${_supabaseAnonKey.isNotEmpty ? 'SET' : 'EMPTY'}');
+      debugPrint('Credentials loaded from compile-time defines.');
+    } catch (e) {
+      debugPrint('Error loading environment defines: $e');
+      rethrow;
+    }
+  }
+
+  /// Initializes the Supabase client with credentials from appropriate source.
+  /// - Mobile/Desktop: Reads from .env file at runtime
+  /// - Web: Reads from compile-time --dart-define values
+  Future<void> initialize() async {
+    try {
+      // Load credentials based on platform
+      if (kIsWeb) {
+        _loadEnvCredentialsFromDefines();
+      } else {
+        await _loadEnvCredentialsFromFile();
+      }
+      
+      if (_supabaseUrl.isEmpty) {
+        throw Exception(
+          'SUPABASE_URL is not set. For web, use:\n'
+          '  flutter run -d chrome --dart-define=SUPABASE_URL=https://... --dart-define=SUPABASE_ANON_KEY=...\n'
+          'Or ensure --dart-define-from-file=.env is passed correctly.'
+        );
+      }
+      if (_supabaseAnonKey.isEmpty) {
+        throw Exception(
+          'SUPABASE_ANON_KEY is not set. For web, use:\n'
+          '  flutter run -d chrome --dart-define=SUPABASE_URL=https://... --dart-define=SUPABASE_ANON_KEY=...\n'
+          'Or ensure --dart-define-from-file=.env is passed correctly.'
+        );
+      }
+      
       await Supabase.initialize(
         url: _supabaseUrl,
         anonKey: _supabaseAnonKey,

@@ -116,7 +116,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
                 width: 100,
                 height: 100,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Icon(
@@ -246,7 +246,7 @@ class _PermissionTile extends StatelessWidget {
               radius: 24,
               backgroundColor: isGranted
                   ? Colors.green.shade50
-                  : AppColors.primary.withOpacity(0.1),
+                  : AppColors.primary.withValues(alpha: 0.1),
               child: Icon(
                 isGranted ? Icons.check_circle : icon,
                 color: isGranted ? Colors.green : AppColors.primary,

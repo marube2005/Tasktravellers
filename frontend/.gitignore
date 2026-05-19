@@ -44,5 +44,7 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-
+# Environment and credential files
 .env
+run-web.ps1
+run-*.ps1

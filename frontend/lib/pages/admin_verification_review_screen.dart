@@ -339,7 +339,7 @@ class _AdminVerificationReviewScreenState
             margin: const EdgeInsets.only(bottom: 16),
             child: ExpansionTile(
               leading: CircleAvatar(
-                backgroundColor: _getStatusColor(status).withOpacity(0.2),
+                backgroundColor: _getStatusColor(status).withValues(alpha: 0.2),
                 child: Icon(
                   _getStatusIcon(status),
                   color: _getStatusColor(status),
@@ -359,7 +359,7 @@ class _AdminVerificationReviewScreenState
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(status).withOpacity(0.2),
+                        color: _getStatusColor(status).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
