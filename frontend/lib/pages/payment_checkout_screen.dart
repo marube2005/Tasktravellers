@@ -182,8 +182,16 @@ class _PhoneNumberField extends StatelessWidget {
             filled: true,
             fillColor: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: BorderSide.none,
+              borderRadius: BorderRadius.circular(14.0),
+              borderSide: BorderSide(
+                color: isDarkMode ? AppColors.borderDark : AppColors.borderLight,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14.0),
+              borderSide: BorderSide(
+                color: isDarkMode ? AppColors.borderDark : AppColors.borderLight,
+              ),
             ),
           ),
         ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../themes/app_colors.dart';
+import '../widgets/custom_text_field.dart';
 
 /// Admin screen to review and approve/reject Sacco verification requests.
 /// Only accessible to users with 'admin' role.
@@ -134,12 +135,11 @@ class _AdminVerificationReviewScreenState
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Reject Verification'),
-        content: TextField(
+        content: AppTextField(
           controller: reasonController,
-          decoration: const InputDecoration(
-            labelText: 'Rejection reason',
-            hintText: 'Enter reason for rejection...',
-          ),
+          label: 'Rejection reason',
+          hint: 'Enter reason for rejection...',
+          prefixIcon: Icons.edit_outlined,
           maxLines: 3,
         ),
         actions: [

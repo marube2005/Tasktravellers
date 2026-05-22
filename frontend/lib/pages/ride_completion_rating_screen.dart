@@ -1,5 +1,6 @@
 // lib/ride_complete_screen.dart
 import 'package:flutter/material.dart';
+import '../widgets/custom_text_field.dart';
 
 class RideCompleteScreen extends StatefulWidget {
   const RideCompleteScreen({super.key});
@@ -68,11 +69,11 @@ class _RideCompleteScreenState extends State<RideCompleteScreen> {
             _buildStarRating(),
             const SizedBox(height: 32),
             // Feedback Text Field
-            TextFormField(
+            AppTextField(
               controller: _feedbackController,
-              decoration: const InputDecoration(
-                hintText: 'Tell us more about your experience (optional)',
-              ),
+              label: 'Feedback',
+              hint: 'Tell us more about your experience (optional)',
+              prefixIcon: Icons.message_outlined,
               maxLines: 4,
             ),
             const SizedBox(height: 32),
