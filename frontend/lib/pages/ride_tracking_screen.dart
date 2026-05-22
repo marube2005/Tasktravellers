@@ -2,12 +2,17 @@
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:frontend/services/engagement_service.dart';
 import 'package:frontend/services/location_service.dart';
+import 'package:frontend/services/user_service.dart';
 
 class LiveTrackingScreen extends StatefulWidget {
-  const LiveTrackingScreen({super.key});
+  const LiveTrackingScreen({super.key, this.rideId});
+
+  final String? rideId;
 
   @override
   State<LiveTrackingScreen> createState() => _LiveTrackingScreenState();
@@ -23,6 +28,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
   Map<String, dynamic>? _vehicleLocation;
   
   final LocationService _locationService = LocationService();
+  final EngagementService _engagementService = EngagementService();
   
   // Demo ride data - in production, fetch from Supabase
   static const String _vehicleId = 'vehicle_001';
@@ -34,6 +40,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
   void initState() {
     super.initState();
     _initializeTracking();
+    _engagementService.syncQueuedActions();
   }
 
   Future<void> _initializeTracking() async {
@@ -79,6 +86,54 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
         }
       },
     );
+  }
+
+  Future<void> _raiseEmergencyAlert() async {
+    try {
+      final profile = await (() async {
+        try {
+          return await UserService().fetchCurrentUserProfileModel();
+        } catch (_) {
+          return null;
+        }
+      })();
+      final locationLabel = _passengerLocation == null
+          ? null
+          : await _locationService.getAddressFromCoordinates(
+              _passengerLocation!.latitude,
+              _passengerLocation!.longitude,
+            );
+
+      final alertMessage = [
+        'SOS alert from Travelers App',
+        if (widget.rideId != null) 'Ride: ${widget.rideId}',
+        if (locationLabel != null) 'Location: $locationLabel',
+      ].join(' • ');
+
+      await _engagementService.raiseEmergencyAlert(
+        rideId: widget.rideId,
+        message: alertMessage,
+        emergencyContactName: profile?.emergencyContactName,
+        emergencyContactPhone: profile?.emergencyContactPhone,
+        latitude: _passengerLocation?.latitude,
+        longitude: _passengerLocation?.longitude,
+        locationLabel: locationLabel,
+      );
+
+      await Clipboard.setData(ClipboardData(text: alertMessage));
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('SOS alert sent and copied to clipboard')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+        );
+      }
+    }
   }
 
   void _addPassengerMarker() {
@@ -211,6 +266,28 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
           // --- 2. Map Control Buttons (Mobile only) ---
           if (!kIsWeb)
             const _MapControlButtons(),
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 24,
+            child: SafeArea(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _raiseEmergencyAlert,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                      ),
+                      icon: const Icon(Icons.sos),
+                      label: const Text('SOS'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

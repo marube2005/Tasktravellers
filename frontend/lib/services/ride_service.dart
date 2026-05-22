@@ -42,6 +42,11 @@ class RideService {
     return 'https://travelersapp.co.ke/join/$token';
   }
 
+  String _generateAcceptanceCode() {
+    final token = const Uuid().v4().replaceAll('-', '').toUpperCase();
+    return token.substring(0, 6);
+  }
+
   /// =========================================================================
   /// 1. PASSENGER ACTIONS: RIDE CREATION (GROUP POOL)
   /// =========================================================================
@@ -53,6 +58,7 @@ class RideService {
     required String destination,
     required int groupSize,
     double? estimatedFare,
+    String? groupNote,
   }) async {
     final passengerId = _currentUserId;
     if (passengerId == null) {
@@ -61,9 +67,14 @@ class RideService {
 
     try {
       final inviteLink = _generateInviteLink();
+      final acceptanceCode = _generateAcceptanceCode();
+      final acceptanceCodeExpiresAt = DateTime.now()
+          .add(const Duration(minutes: 15))
+          .toUtc()
+          .toIso8601String();
       
       // 1. Insert the new ride request into the 'rides' table
-    final Map<String, dynamic> ride = await _supabaseClient
+      final Map<String, dynamic> ride = await _supabaseClient
           .from('rides')
           .insert({
             'origin': origin,
@@ -71,13 +82,16 @@ class RideService {
             'group_size': groupSize,
             'estimated_fare': estimatedFare,
             'invite_link': inviteLink,
+            'acceptance_code': acceptanceCode,
+            'acceptance_code_expires_at': acceptanceCodeExpiresAt,
+            'group_note': groupNote,
             'status': RideStatus.open.toShortString(),
             'creator_id': passengerId,
           })
-      .select()
-      .single();
+          .select()
+          .single();
 
-    final String rideId = ride['id'] as String;
+      final String rideId = ride['id'] as String;
 
       // 2. Automatically book the ride creator (passenger) onto the ride
       await _supabaseClient.from('bookings').insert({
@@ -86,7 +100,7 @@ class RideService {
         'passenger_id': passengerId, 
       });
 
-  return ride;
+      return ride;
     } on PostgrestException catch (e) {
       throw Exception('Database Error creating ride: ${e.message}');
     } catch (e) {
@@ -171,6 +185,55 @@ class RideService {
       throw Exception('Database Error updating ride status: ${e.message}');
     } catch (e) {
       throw Exception('An unexpected error occurred while updating status: $e');
+    }
+  }
+
+  /// OTP-style acceptance flow: verify the shared code before accepting the ride.
+  Future<void> acceptRideWithCode({
+    required String rideId,
+    required String acceptanceCode,
+    required String vehicleId,
+    required String saccoId,
+    required double confirmedFare,
+  }) async {
+    final ride = await _supabaseClient
+        .from('rides')
+        .select('acceptance_code, acceptance_code_expires_at')
+        .eq('id', rideId)
+        .single();
+
+    final storedCode = (ride['acceptance_code'] as String?)?.trim().toUpperCase();
+    final storedExpiryRaw = ride['acceptance_code_expires_at'];
+    final storedExpiry = storedExpiryRaw == null
+        ? null
+        : DateTime.tryParse(storedExpiryRaw.toString())?.toUtc();
+    final now = DateTime.now().toUtc();
+
+    if (storedCode == null || storedCode.isEmpty) {
+      throw Exception('No acceptance code is configured for this ride.');
+    }
+    if (storedExpiry != null && now.isAfter(storedExpiry)) {
+      throw Exception('The ride acceptance code has expired.');
+    }
+    if (storedCode != acceptanceCode.trim().toUpperCase()) {
+      throw Exception('Invalid ride acceptance code.');
+    }
+
+    await acceptRide(
+      rideId: rideId,
+      vehicleId: vehicleId,
+      saccoId: saccoId,
+      confirmedFare: confirmedFare,
+    );
+  }
+
+  Future<Map<String, dynamic>?> fetchRideById(String rideId) async {
+    try {
+      return await _supabaseClient.from('rides').select('*').eq('id', rideId).maybeSingle();
+    } on PostgrestException catch (e) {
+      throw Exception('Database Error fetching ride: ${e.message}');
+    } catch (e) {
+      throw Exception('An unexpected error occurred while fetching the ride: $e');
     }
   }
 

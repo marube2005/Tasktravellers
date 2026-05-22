@@ -1,13 +1,51 @@
-// lib/pages/payment_checkout_screen.dart
 import 'package:flutter/material.dart';
+import 'package:frontend/services/payment_service.dart';
 import 'package:frontend/utils/constants.dart';
-// import 'package:travelers_app/main.dart'; // Adjust import path
 
-class PaymentScreen extends StatelessWidget {
-  const PaymentScreen({super.key});
+class PaymentScreen extends StatefulWidget {
+  const PaymentScreen({
+    super.key,
+    this.rideId = 'demo-ride',
+    this.amount = 1650,
+  });
+
+  final String rideId;
+  final double amount;
+
+  @override
+  State<PaymentScreen> createState() => _PaymentScreenState();
+}
+
+class _PaymentScreenState extends State<PaymentScreen> {
+  bool _isProcessing = false;
+
+  Future<void> _pay() async {
+    setState(() => _isProcessing = true);
+    try {
+      await PaymentService().initiatePayment(
+        rideId: widget.rideId,
+        amount: widget.amount,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Payment request sent to PayHero')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final total = widget.amount.toStringAsFixed(0);
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () {}),
@@ -18,9 +56,7 @@ class PaymentScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // Summary Section
           const _SummarySection(),
-          // Main Content
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 32.0),
@@ -51,13 +87,14 @@ class PaymentScreen extends StatelessWidget {
           ),
         ],
       ),
-      // Sticky Bottom Button
-      bottomNavigationBar: const _PayButton(),
+      bottomNavigationBar: _PayButton(
+        isProcessing: _isProcessing,
+        label: 'Pay Ksh $total',
+        onPressed: _pay,
+      ),
     );
   }
 }
-
-// --- Reusable Component Widgets ---
 
 class _SummarySection extends StatelessWidget {
   const _SummarySection();
@@ -66,7 +103,7 @@ class _SummarySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    
+
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -106,10 +143,8 @@ class _SummaryRow extends StatelessWidget {
     final textStyle = isTotal
         ? Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)
         : Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade500);
-    
-    final valueStyle = isTotal 
-        ? textStyle 
-        : Theme.of(context).textTheme.bodyMedium;
+
+    final valueStyle = isTotal ? textStyle : Theme.of(context).textTheme.bodyMedium;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -144,8 +179,11 @@ class _MpesaCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              // Use a local asset or a placeholder if network image fails
-              Image.network('https://picsum.photos/seed/mpesa/40', height: 32, errorBuilder: (c, o, s) => const Icon(Icons.payment)),
+              Image.network(
+                'https://picsum.photos/seed/mpesa/40',
+                height: 32,
+                errorBuilder: (c, o, s) => const Icon(Icons.payment),
+              ),
               const SizedBox(width: 16),
               const Text('M-Pesa', style: TextStyle(fontWeight: FontWeight.bold)),
             ],
@@ -165,7 +203,7 @@ class _MpesaCard extends StatelessWidget {
 
 class _PhoneNumberField extends StatelessWidget {
   const _PhoneNumberField();
-  
+
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -207,7 +245,11 @@ class _PoweredByFooter extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Image.network('https://picsum.photos/seed/payhero/40', height: 32, errorBuilder: (c, o, s) => const Icon(Icons.shield)),
+        Image.network(
+          'https://picsum.photos/seed/payhero/40',
+          height: 32,
+          errorBuilder: (c, o, s) => const Icon(Icons.shield),
+        ),
         const SizedBox(width: 16),
         const Text('Powered by PayHero', style: TextStyle(color: Colors.grey, fontSize: 14)),
       ],
@@ -216,7 +258,15 @@ class _PoweredByFooter extends StatelessWidget {
 }
 
 class _PayButton extends StatelessWidget {
-  const _PayButton();
+  const _PayButton({
+    required this.isProcessing,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final bool isProcessing;
+  final String label;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -226,14 +276,20 @@ class _PayButton extends StatelessWidget {
       color: theme.scaffoldBackgroundColor,
       child: SafeArea(
         child: ElevatedButton(
-          onPressed: () {},
+          onPressed: isProcessing ? null : onPressed,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
             minimumSize: const Size.fromHeight(56),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
           ),
-          child: const Text('Pay Ksh 1,650', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          child: isProcessing
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                )
+              : Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         ),
       ),
     );

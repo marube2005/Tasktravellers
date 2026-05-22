@@ -14,10 +14,12 @@ import 'pages/sacco_verification_screen.dart';
 import 'pages/admin_verification_review_screen.dart';
 import 'pages/permissions_screen.dart';
 import 'pages/passenger_dashboard_screen.dart';
+import 'pages/create_group_ride_screen.dart';
 import 'pages/search_matatus_screen.dart';
 import 'pages/payment_checkout_screen.dart';
 import 'pages/ride_completion_rating_screen.dart';
 import 'pages/ride_tracking_screen.dart';
+import 'pages/ride_acceptance_screen.dart';
 import 'pages/email_verification.dart';
 import 'pages/sacco_dashboard_screen.dart';
 import 'pages/reset_password_screen.dart';
@@ -84,11 +86,13 @@ class _MyAppState extends State<MyApp> {
         '/sacco-verification': (context) => const SaccoVerificationScreen(),
         '/permissions': (context) => const PermissionsScreen(),
         '/dashboard': (context) => const PassengerDashboardScreen(),
+        '/create-group-ride': (context) => const CreateGroupRideScreen(),
         '/sacco-dashboard': (context) => const SaccoDashboardScreen(),
         '/matatu-list': (context) => const MatatuListScreen(),
         '/payment': (context) => const PaymentScreen(),
         '/ride-complete': (context) => const RideCompleteScreen(),
         '/live-tracking': (context) => const LiveTrackingScreen(),
+        '/ride-acceptance': (context) => const RideAcceptanceScreen(),
         '/reset_password': (context) => const ResetPasswordScreen(),
         '/update_password': (context) => const UpdatePasswordScreen(),
         '/admin-verification-review': (context) => const AdminVerificationReviewScreen(),

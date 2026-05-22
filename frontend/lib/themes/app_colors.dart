@@ -14,11 +14,14 @@ class AppColors {
   // Cards & Surfaces
   static const Color cardLight = Colors.white;
   static const Color cardDark = Color(0xFF1A202C);
+  static const Color iconBgLight = Color(0xFFF3F4F6);
+  static const Color iconBgDark = Color(0xFF2D3748);
 
   // Text & Icons
   static const Color textLight = Color(0xFF1A202C);
   static const Color textDark = Color(0xFFE5E7EB);
   static const Color textGrey = Color(0xFF6B7280);
+  static const Color cornflowerBlue = Color(0xFF6495ED);
 
   // Borders
   static const Color borderLight = Color(0xFFE5E7EB);
