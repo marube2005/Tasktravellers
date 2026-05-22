@@ -90,7 +90,13 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
 
   Future<void> _raiseEmergencyAlert() async {
     try {
-      final profile = await UserService().fetchCurrentUserProfileModel();
+      final profile = await (() async {
+        try {
+          return await UserService().fetchCurrentUserProfileModel();
+        } catch (_) {
+          return null;
+        }
+      })();
       final locationLabel = _passengerLocation == null
           ? null
           : await _locationService.getAddressFromCoordinates(

@@ -50,6 +50,9 @@ class _RideChatScreenState extends State<RideChatScreen> {
       _messageController.clear();
     } catch (e) {
       if (mounted) {
+        if (e.toString().contains('queued for sync')) {
+          _messageController.clear();
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
         );
