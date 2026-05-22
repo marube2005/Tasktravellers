@@ -7,14 +7,14 @@ class SaccoDashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sacco Registration'),
+        title: const Text('Sacco Dashboard'),
         centerTitle: true,
       ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Icon(Icons.directions_bus, size: 80, color: Colors.blue),
               const SizedBox(height: 24),
@@ -27,15 +27,26 @@ class SaccoDashboardScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'Register your fleet and start managing your rides.',
+                'Review rides, accept them with a code, and keep operations moving.',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: Colors.grey.shade600,
                     ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 32),
+              ElevatedButton(
+                onPressed: () => Navigator.pushNamed(context, '/ride-acceptance'),
+                child: const Text('Accept a Ride'),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: () => Navigator.pushNamed(context, '/admin-verification-review'),
+                child: const Text('Verification Review'),
+              ),
+              const SizedBox(height: 24),
               const Text(
-                'Sacco registration flow coming soon.',
+                'Operational tools and analytics remain available through the backend and admin stack.',
+                textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.grey),
               ),
             ],
