@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
+import '../themes/app_colors.dart';
+import '../widgets/custom_text_field.dart';
 
 class UpdatePasswordScreen extends StatefulWidget {
   const UpdatePasswordScreen({super.key});
@@ -50,7 +53,7 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -75,27 +78,27 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
           color: Color(0xFF4CAF50),
         ),
         const SizedBox(height: 24),
-        const Text(
+        Text(
           'Password Updated!',
-          style: TextStyle(
+          style: GoogleFonts.manrope(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: AppColors.textLight,
           ),
         ),
         const SizedBox(height: 12),
-        const Text(
+        Text(
           'Your password has been successfully updated.\nYou can now login with your new password.',
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: GoogleFonts.manrope(
             fontSize: 16,
-            color: Colors.black54,
+            color: AppColors.textGrey,
           ),
         ),
         const SizedBox(height: 32),
         SizedBox(
           width: double.infinity,
-          height: 50,
+          height: 56,
           child: ElevatedButton(
             onPressed: () {
               Navigator.pushNamedAndRemoveUntil(
@@ -104,20 +107,7 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
                 (route) => false,
               );
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4C8DFF),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text(
-              'Go to Login',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
+            child: const Text('Go to Login'),
           ),
         ),
       ],
@@ -131,43 +121,37 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 20),
-          const Text(
+          Text(
             'Set New Password',
-            style: TextStyle(
+            style: GoogleFonts.manrope(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: AppColors.textLight,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Please enter your new password below.',
-            style: TextStyle(
+            style: GoogleFonts.manrope(
               fontSize: 16,
-              color: Colors.black54,
+              color: AppColors.textGrey,
             ),
           ),
           const SizedBox(height: 32),
-          TextFormField(
+          AppTextField(
             controller: _passwordController,
+            label: 'New Password',
+            hint: 'Enter new password',
+            prefixIcon: Icons.lock_outline,
             obscureText: _obscurePassword,
-            decoration: InputDecoration(
-              labelText: 'New Password',
-              hintText: 'Enter new password',
-              prefixIcon: const Icon(Icons.lock_outline),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                ),
-                onPressed: () {
-                  setState(() => _obscurePassword = !_obscurePassword);
-                },
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                color: AppColors.textGrey,
               ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: Colors.white,
+              onPressed: () {
+                setState(() => _obscurePassword = !_obscurePassword);
+              },
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -180,29 +164,23 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
             },
           ),
           const SizedBox(height: 16),
-          TextFormField(
+          AppTextField(
             controller: _confirmPasswordController,
+            label: 'Confirm Password',
+            hint: 'Re-enter new password',
+            prefixIcon: Icons.lock_outline,
             obscureText: _obscureConfirmPassword,
-            decoration: InputDecoration(
-              labelText: 'Confirm Password',
-              hintText: 'Re-enter new password',
-              prefixIcon: const Icon(Icons.lock_outline),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscureConfirmPassword
-                      ? Icons.visibility_off
-                      : Icons.visibility,
-                ),
-                onPressed: () {
-                  setState(() =>
-                      _obscureConfirmPassword = !_obscureConfirmPassword);
-                },
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscureConfirmPassword
+                    ? Icons.visibility_off
+                    : Icons.visibility,
+                color: AppColors.textGrey,
               ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: Colors.white,
+              onPressed: () {
+                setState(() =>
+                    _obscureConfirmPassword = !_obscureConfirmPassword);
+              },
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -217,15 +195,9 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
-            height: 50,
+            height: 56,
             child: ElevatedButton(
               onPressed: _isLoading ? null : _updatePassword,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4C8DFF),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
               child: _isLoading
                   ? const SizedBox(
                       height: 20,
@@ -235,14 +207,7 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : const Text(
-                      'Update Password',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
+                  : const Text('Update Password'),
             ),
           ),
         ],

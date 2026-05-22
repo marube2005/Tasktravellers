@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
+import '../themes/app_colors.dart';
+import '../widgets/custom_text_field.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -43,8 +46,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      return Scaffold(
+      backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -69,7 +72,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         const Icon(
           Icons.mark_email_read_outlined,
           size: 80,
-          color: Color(0xFF4C8DFF),
+          color: AppColors.primary,
         ),
         const SizedBox(height: 24),
         const Text(
@@ -77,7 +80,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: AppColors.textLight,
           ),
         ),
         const SizedBox(height: 12),
@@ -86,7 +89,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontSize: 16,
-            color: Colors.black54,
+            color: AppColors.textGrey,
           ),
         ),
         const SizedBox(height: 32),
@@ -96,20 +99,20 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           child: ElevatedButton(
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4C8DFF),
+              backgroundColor: AppColors.primary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text(
-              'Back to Login',
+              child: const Text(
+               'Back to Login',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                  color: Colors.white,
+                ),
               ),
             ),
-          ),
         ),
       ],
     );
@@ -122,39 +125,32 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 20),
-          const Text(
-            'Reset Password',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Enter your email address and we\'ll send you a link to reset your password.',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.black54,
-            ),
-          ),
-          const SizedBox(height: 32),
-          TextFormField(
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
-            decoration: InputDecoration(
-              labelText: 'Email',
-              hintText: 'Enter your email',
-              prefixIcon: const Icon(Icons.email_outlined),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: Colors.white,
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your email';
+           Text(
+             'Reset Password',
+             style: GoogleFonts.manrope(
+               fontSize: 28,
+               fontWeight: FontWeight.bold,
+               color: AppColors.textLight,
+             ),
+           ),
+           const SizedBox(height: 8),
+           Text(
+             'Enter your email address and we\'ll send you a link to reset your password.',
+             style: GoogleFonts.manrope(
+               fontSize: 16,
+               color: AppColors.textGrey,
+             ),
+           ),
+           const SizedBox(height: 32),
+           AppTextField(
+             controller: _emailController,
+             label: 'Email',
+             hint: 'Enter your email',
+             prefixIcon: Icons.email_outlined,
+             keyboardType: TextInputType.emailAddress,
+             validator: (value) {
+               if (value == null || value.isEmpty) {
+                 return 'Please enter your email';
               }
               if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
                   .hasMatch(value)) {
@@ -169,11 +165,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             height: 50,
             child: ElevatedButton(
               onPressed: _isLoading ? null : _resetPassword,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4C8DFF),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+             style: ElevatedButton.styleFrom(
+               backgroundColor: AppColors.primary,
+               shape: RoundedRectangleBorder(
+                 borderRadius: BorderRadius.circular(12),
+               ),
               ),
               child: _isLoading
                   ? const SizedBox(

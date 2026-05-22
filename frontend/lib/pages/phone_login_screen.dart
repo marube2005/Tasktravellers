@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../themes/app_colors.dart';
+import '../widgets/custom_text_field.dart';
 
 class PhoneVerificationScreen extends StatefulWidget {
   const PhoneVerificationScreen({super.key});
@@ -210,20 +211,12 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
 
               if (!_otpSent) ...[
                 // Phone number input
-                TextFormField(
+                AppTextField(
                   controller: _phoneController,
+                  label: 'Phone number',
+                  hint: '0712345678',
+                  prefixIcon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(
-                    labelText: 'Phone Number',
-                    hintText: '0712345678',
-                    prefixIcon: const Icon(Icons.phone_outlined),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
                 ),
                 const SizedBox(height: 24),
 
@@ -272,14 +265,15 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                         decoration: InputDecoration(
                           counterText: '',
                           filled: true,
-                          fillColor: Colors.white,
+                          fillColor: AppColors.cardLight,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                BorderSide(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide(
+                              color: AppColors.borderLight.withValues(alpha: 0.85),
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(14),
                             borderSide: const BorderSide(
                                 color: AppColors.primary, width: 2),
                           ),
@@ -341,10 +335,10 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
               const SizedBox(height: 24),
               // Skip option (for email-verified users)
               Center(
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/role-selection');
-                  },
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(context, '/role-selection');
+                    },
                   child: Text(
                     'Skip for now',
                     style: GoogleFonts.manrope(

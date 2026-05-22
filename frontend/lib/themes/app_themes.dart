@@ -35,10 +35,28 @@ class AppThemes {
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: AppColors.cardLight,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       hintStyle: const TextStyle(color: AppColors.textGrey),
+      labelStyle: const TextStyle(color: AppColors.textGrey),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12.0),
-        borderSide: BorderSide.none,
+        borderRadius: BorderRadius.circular(14.0),
+        borderSide: BorderSide(color: AppColors.borderLight.withValues(alpha: 0.85)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14.0),
+        borderSide: BorderSide(color: AppColors.borderLight.withValues(alpha: 0.85)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14.0),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14.0),
+        borderSide: BorderSide(color: Colors.red.shade300),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14.0),
+        borderSide: BorderSide(color: Colors.red.shade400, width: 1.5),
       ),
     ),
   );
@@ -75,10 +93,28 @@ class AppThemes {
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: AppColors.cardDark,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       hintStyle: const TextStyle(color: AppColors.textGrey),
+      labelStyle: const TextStyle(color: AppColors.textGrey),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12.0),
-        borderSide: BorderSide.none,
+        borderRadius: BorderRadius.circular(14.0),
+        borderSide: BorderSide(color: AppColors.borderDark.withValues(alpha: 0.9)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14.0),
+        borderSide: BorderSide(color: AppColors.borderDark.withValues(alpha: 0.9)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14.0),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14.0),
+        borderSide: BorderSide(color: Colors.red.shade300),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14.0),
+        borderSide: BorderSide(color: Colors.red.shade400, width: 1.5),
       ),
     ),
   );
