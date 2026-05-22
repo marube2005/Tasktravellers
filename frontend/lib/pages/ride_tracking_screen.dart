@@ -1,50 +1,216 @@
 // lib/pages/ride_tracking_screen.dart
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/utils/constants.dart';
-// import 'package:travelers_app/main.dart'; // Adjust import path
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:frontend/services/location_service.dart';
 
-class LiveTrackingScreen extends StatelessWidget {
+class LiveTrackingScreen extends StatefulWidget {
   const LiveTrackingScreen({super.key});
 
   @override
+  State<LiveTrackingScreen> createState() => _LiveTrackingScreenState();
+}
+
+class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
+  late GoogleMapController _mapController;
+  
+  final Set<Marker> _markers = {};
+  final Set<Polyline> _polylines = {};
+  
+  Position? _passengerLocation;
+  Map<String, dynamic>? _vehicleLocation;
+  
+  final LocationService _locationService = LocationService();
+  
+  // Demo ride data - in production, fetch from Supabase
+  static const String _vehicleId = 'vehicle_001';
+  
+  // Default Nairobi location for testing
+  static const LatLng _defaultLocation = LatLng(-1.2921, 36.8219);
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeTracking();
+  }
+
+  Future<void> _initializeTracking() async {
+    // Get passenger's current location
+    _passengerLocation = await _locationService.getCurrentPosition();
+    
+    if (mounted) {
+      setState(() {
+        if (_passengerLocation != null) {
+          _addPassengerMarker();
+        }
+      });
+    }
+
+    // Subscribe to vehicle real-time location updates
+    _subscribeToVehicleLocation();
+    
+    // Start streaming passenger location (for driver to see)
+    _locationService.startLocationStream(
+      onLocationUpdate: (position) {
+        if (mounted) {
+          setState(() {
+            _passengerLocation = position;
+            _updatePassengerMarker();
+            _updatePolylines();
+          });
+        }
+      },
+      distanceFilter: 5, // Update every 5 meters
+    );
+  }
+
+  void _subscribeToVehicleLocation() {
+    _locationService.subscribeToVehicleLocation(
+      vehicleId: _vehicleId,
+      onUpdate: (location) {
+        if (mounted) {
+          setState(() {
+            _vehicleLocation = location;
+            _updateVehicleMarker();
+            _updatePolylines();
+          });
+        }
+      },
+    );
+  }
+
+  void _addPassengerMarker() {
+    if (_passengerLocation == null) return;
+    
+    _markers.removeWhere((m) => m.markerId.value == 'passenger');
+    _markers.add(
+      Marker(
+        markerId: const MarkerId('passenger'),
+        position: LatLng(_passengerLocation!.latitude, _passengerLocation!.longitude),
+        infoWindow: const InfoWindow(title: 'Your Location'),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+      ),
+    );
+  }
+
+  void _updatePassengerMarker() {
+    _addPassengerMarker();
+  }
+
+  void _updateVehicleMarker() {
+    if (_vehicleLocation == null) return;
+    
+    final lat = _vehicleLocation!['latitude'] as double?;
+    final lng = _vehicleLocation!['longitude'] as double?;
+    final heading = _vehicleLocation!['heading'] as double?;
+    
+    if (lat == null || lng == null) return;
+
+    _markers.removeWhere((m) => m.markerId.value == 'vehicle');
+    _markers.add(
+      Marker(
+        markerId: const MarkerId('vehicle'),
+        position: LatLng(lat, lng),
+        infoWindow: const InfoWindow(
+          title: 'Vehicle Location',
+          snippet: 'Your matatu is on the way',
+        ),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        rotation: heading ?? 0,
+      ),
+    );
+  }
+
+  void _updatePolylines() {
+    if (_passengerLocation == null || _vehicleLocation == null) return;
+
+    final vehicleLat = _vehicleLocation!['latitude'] as double?;
+    final vehicleLng = _vehicleLocation!['longitude'] as double?;
+    
+    if (vehicleLat == null || vehicleLng == null) return;
+
+    _polylines.clear();
+    _polylines.add(
+      Polyline(
+        polylineId: const PolylineId('route'),
+        points: [
+          LatLng(_passengerLocation!.latitude, _passengerLocation!.longitude),
+          LatLng(vehicleLat, vehicleLng),
+        ],
+        color: Colors.blue,
+        width: 3,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    if (!kIsWeb) {
+      _mapController.dispose();
+    }
+    _locationService.stopLocationStream();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final initialLocation = _vehicleLocation != null
+        ? LatLng(
+            _vehicleLocation!['latitude'] as double,
+            _vehicleLocation!['longitude'] as double,
+          )
+        : (_passengerLocation != null
+            ? LatLng(_passengerLocation!.latitude, _passengerLocation!.longitude)
+            : _defaultLocation);
+
     return Scaffold(
       body: Stack(
         children: [
-          // --- 1. Map Background ---
-          // In a real app, this would be the GoogleMap widget
-          Image.network(
-            'https://i.imgur.com/p4Co3g7.png', // Placeholder map image
-            fit: BoxFit.cover,
-            height: double.infinity,
-            width: double.infinity,
-          ),
-
-          // --- 2. Map Control Buttons ---
-          const _MapControlButtons(),
-          
-          // --- 3. Draggable Bottom Sheet ---
-          DraggableScrollableSheet(
-            initialChildSize: 0.5, // Start at 50% height
-            minChildSize: 0.3,   // Can be dragged down to 30%
-            maxChildSize: 0.9,   // Can be dragged up to 90%
-            builder: (context, scrollController) {
-              return ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20.0)),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.7),
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(20.0)),
+          // --- 1. Google Map (Mobile only) ---
+          if (!kIsWeb)
+            GoogleMap(
+              onMapCreated: (controller) {
+                _mapController = controller;
+              },
+              initialCameraPosition: CameraPosition(
+                target: initialLocation,
+                zoom: 15.0,
+              ),
+              markers: _markers,
+              polylines: _polylines,
+              myLocationEnabled: true,
+              myLocationButtonEnabled: false,
+              zoomControlsEnabled: false,
+            )
+          else
+            // Web Fallback: Simple map placeholder
+            Container(
+              color: Colors.grey.shade300,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.location_on, size: 64, color: Colors.red),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Live Tracking',
+                      style: Theme.of(context).textTheme.headlineSmall,
                     ),
-                    child: _BottomSheetContent(scrollController: scrollController),
-                  ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Maps not yet available on web',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
                 ),
-              );
-            },
-          ),
+              ),
+            ),
+
+          // --- 2. Map Control Buttons (Mobile only) ---
+          if (!kIsWeb)
+            const _MapControlButtons(),
         ],
       ),
     );
@@ -53,9 +219,14 @@ class LiveTrackingScreen extends StatelessWidget {
 
 // --- Reusable Component Widgets ---
 
-class _MapControlButtons extends StatelessWidget {
+class _MapControlButtons extends StatefulWidget {
   const _MapControlButtons();
   
+  @override
+  State<_MapControlButtons> createState() => _MapControlButtonsState();
+}
+
+class _MapControlButtonsState extends State<_MapControlButtons> {
   @override
   Widget build(BuildContext context) {
     return Positioned(
@@ -63,11 +234,46 @@ class _MapControlButtons extends StatelessWidget {
       right: 16,
       child: Column(
         children: [
-          _MapButton(icon: Icons.add, borderRadius: const BorderRadius.vertical(top: Radius.circular(12))),
+          _MapButton(
+            icon: Icons.add,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            onPressed: () async {
+              final state = context.findAncestorStateOfType<_LiveTrackingScreenState>();
+              if (state != null) {
+                state._mapController.animateCamera(
+                  CameraUpdate.zoomIn(),
+                );
+              }
+            },
+          ),
           const SizedBox(height: 2),
-          _MapButton(icon: Icons.remove, borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12))),
+          _MapButton(
+            icon: Icons.remove,
+            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+            onPressed: () async {
+              final state = context.findAncestorStateOfType<_LiveTrackingScreenState>();
+              if (state != null) {
+                state._mapController.animateCamera(
+                  CameraUpdate.zoomOut(),
+                );
+              }
+            },
+          ),
           const SizedBox(height: 16),
-          _MapButton(icon: Icons.navigation_outlined, borderRadius: BorderRadius.circular(12)),
+          _MapButton(
+            icon: Icons.my_location,
+            borderRadius: BorderRadius.circular(12),
+            onPressed: () async {
+              final state = context.findAncestorStateOfType<_LiveTrackingScreenState>();
+              if (state != null && state._passengerLocation != null) {
+                state._mapController.animateCamera(
+                  CameraUpdate.newLatLng(
+                    LatLng(state._passengerLocation!.latitude, state._passengerLocation!.longitude),
+                  ),
+                );
+              }
+            },
+          ),
         ],
       ),
     );
@@ -77,7 +283,13 @@ class _MapControlButtons extends StatelessWidget {
 class _MapButton extends StatelessWidget {
   final IconData icon;
   final BorderRadius borderRadius;
-  const _MapButton({required this.icon, required this.borderRadius});
+  final VoidCallback? onPressed;
+  
+  const _MapButton({
+    required this.icon,
+    required this.borderRadius,
+    this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -85,183 +297,18 @@ class _MapButton extends StatelessWidget {
       borderRadius: borderRadius,
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-        child: Container(
-          width: 52,
-          height: 52,
+        child: Material(
           color: Colors.black.withValues(alpha: 0.5),
-          child: Icon(icon, color: Colors.white, size: 28),
-        ),
-      ),
-    );
-  }
-}
-
-class _BottomSheetContent extends StatelessWidget {
-  final ScrollController scrollController;
-  const _BottomSheetContent({required this.scrollController});
-  
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      controller: scrollController,
-      padding: const EdgeInsets.all(0),
-      children: [
-        // Drag Handle
-        Center(
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 12.0),
-            width: 40,
-            height: 5,
-            decoration: BoxDecoration(
-              color: AppColors.handleColor,
-              borderRadius: BorderRadius.circular(10),
+          child: InkWell(
+            onTap: onPressed,
+            child: Container(
+              width: 52,
+              height: 52,
+              alignment: Alignment.center,
+              child: Icon(icon, color: Colors.white, size: 28),
             ),
           ),
         ),
-        // Driver Info
-        const _DriverInfoSection(),
-        // Details Grid
-        const _DetailsGrid(),
-        // Action Buttons
-        const _ActionButtons(),
-      ],
-    );
-  }
-}
-
-class _DriverInfoSection extends StatelessWidget {
-  const _DriverInfoSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      child: Row(
-        children: [
-          const CircleAvatar(
-            radius: 32,
-            backgroundImage: NetworkImage('https://picsum.photos/seed/driver/200'),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('John Doe', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                Row(
-                  children: [
-                    const Icon(Icons.star, color: Colors.yellow, size: 18),
-                    const SizedBox(width: 4),
-                    Text('4.8', style: TextStyle(color: AppColors.infoText, fontSize: 16)),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          OutlinedButton(
-            onPressed: () {},
-            style: OutlinedButton.styleFrom(
-              shape: const CircleBorder(),
-              side: BorderSide(color: AppColors.primary, width: 2),
-              minimumSize: const Size(52, 52),
-            ),
-            child: const Icon(Icons.share, color: AppColors.primary),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DetailsGrid extends StatelessWidget {
-  const _DetailsGrid();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: GridView.count(
-        crossAxisCount: 2,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        childAspectRatio: 2.5, // Adjust ratio for better spacing
-        mainAxisSpacing: 0,
-        crossAxisSpacing: 16,
-        children: const [
-          _InfoTile(label: 'ETA', value: '15 mins'),
-          _InfoTile(label: 'Status', value: 'In Transit'),
-          _InfoTile(label: 'License Plate', value: 'KDA 001A'),
-          _InfoTile(label: 'Vehicle Model', value: 'Nissan Urvan'),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoTile extends StatelessWidget {
-  final String label;
-  final String value;
-  const _InfoTile({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: AppColors.handleColor)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(label, style: const TextStyle(color: AppColors.infoText, fontSize: 14)),
-          const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-        ],
-      ),
-    );
-  }
-}
-
-class _ActionButtons extends StatelessWidget {
-  const _ActionButtons();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-      child: Row(
-        children: [
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.call),
-              label: const Text('Contact Driver'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                side: const BorderSide(color: AppColors.primary),
-                minimumSize: const Size.fromHeight(56),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                textStyle: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.sos),
-              label: const Text('SOS'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.shade600,
-                foregroundColor: Colors.white,
-                minimumSize: const Size.fromHeight(56),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                textStyle: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

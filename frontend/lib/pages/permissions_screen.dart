@@ -16,7 +16,6 @@ class PermissionsScreen extends StatefulWidget {
 class _PermissionsScreenState extends State<PermissionsScreen> {
   bool _locationGranted = false;
   bool _notificationsGranted = false;
-  bool _locationDeniedForever = false;
 
   @override
   void initState() {
@@ -31,7 +30,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
         permission == LocationPermission.whileInUse) {
       setState(() => _locationGranted = true);
     } else if (permission == LocationPermission.deniedForever) {
-      setState(() => _locationDeniedForever = true);
+      _showSettingsDialog();
     }
   }
 
@@ -43,13 +42,11 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
           permission == LocationPermission.whileInUse) {
         setState(() {
           _locationGranted = true;
-          _locationDeniedForever = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Location access granted')),
         );
       } else if (permission == LocationPermission.deniedForever) {
-        setState(() => _locationDeniedForever = true);
         _showSettingsDialog();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

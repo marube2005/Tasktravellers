@@ -19,4 +19,12 @@ class AppColors {
   static const Color textLight = Color(0xFF1A202C);
   static const Color textDark = Color(0xFFE5E7EB);
   static const Color textGrey = Color(0xFF6B7280);
+
+  // Borders
+  static const Color borderLight = Color(0xFFE5E7EB);
+  static const Color borderDark = Color(0xFF374151);
+
+  // Additional UI Colors
+  static const Color handleColor = Color(0xFFD1D5DB);
+  static const Color infoText = Color(0xFF6B7280);
 }
