@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../services/booking_service.dart';
-import '../themes/app_colors.dart';
+import '../../services/booking_service.dart';
+import '../../themes/app_colors.dart';
 import 'ride_chat_screen.dart';
 
 class GroupInviteShareScreen extends StatefulWidget {

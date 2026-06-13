@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../themes/app_colors.dart';
-import '../widgets/avatar_picker.dart';
+import '../../themes/app_colors.dart';
+import '../../widgets/avatar_picker.dart';
 
 /// Profile setup screen for Passengers after role selection.
 /// Collects: name (pre-filled), home area, preferred routes, emergency contact.

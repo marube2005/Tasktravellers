@@ -1,9 +1,9 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+// import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:file_picker/file_picker.dart';
-import '../themes/app_colors.dart';
+import '../../themes/app_colors.dart';
 
 /// Sacco document upload and verification status screen.
 /// Upload: NTSA certificate, Sacco registration, KRA PIN.

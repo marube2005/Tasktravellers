@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:frontend/pages/passenger_profile_setup_screen.dart';
+import 'package:frontend/pages/passenger/passenger_profile_setup_screen.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

@@ -1,6 +1,6 @@
 // lib/ride_complete_screen.dart
 import 'package:flutter/material.dart';
-import '../widgets/custom_text_field.dart';
+import '../../widgets/custom_text_field.dart';
 
 class RideCompleteScreen extends StatefulWidget {
   const RideCompleteScreen({super.key});

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:geolocator/geolocator.dart';
-import '../themes/app_colors.dart';
-import '../services/location_service.dart';
+import '../../themes/app_colors.dart';
+import '../../services/location_service.dart';
 
 /// Permissions prompt screen — requests location access and notification
 /// permissions before entering the main app.

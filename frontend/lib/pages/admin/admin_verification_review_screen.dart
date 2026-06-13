@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../themes/app_colors.dart';
-import '../widgets/custom_text_field.dart';
+import '../../themes/app_colors.dart';
+import '../../widgets/custom_text_field.dart';
 
 /// Admin screen to review and approve/reject Sacco verification requests.
 /// Only accessible to users with 'admin' role.

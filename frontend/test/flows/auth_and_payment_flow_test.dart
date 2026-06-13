@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:frontend/pages/login_screen.dart';
 import 'package:frontend/pages/register_screen.dart';
-import 'package:frontend/pages/payment_checkout_screen.dart';
+import 'package:frontend/pages/passenger/payment_checkout_screen.dart';
 
 void main() {
   testWidgets('login screen validates required fields', (WidgetTester tester) async {

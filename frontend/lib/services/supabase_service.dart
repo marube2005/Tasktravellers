@@ -114,4 +114,19 @@ class SupabaseService {
       rethrow;
     }
   }
+
+/// Generate a unique invite code for group rides
+String generateInviteCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
+  final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+  // Take last 6 digits of timestamp
+  final shortCode = timestamp.substring(timestamp.length - 6);
+  // Add 2 random characters
+  final random = String.fromCharCodes(
+    List.generate(2, (_) => chars.codeUnitAt(
+      DateTime.now().millisecondsSinceEpoch % chars.length
+    ))
+  );
+  return '$shortCode$random';
+}
 }
