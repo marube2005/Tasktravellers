@@ -1,8 +1,7 @@
-// lib/pages/passenger/create_group_ride_screen.dart
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../../services/supabase_service.dart';
 import '../../../widgets/bottom_nav_bar.dart';
+import 'group_invite_share_screen.dart';
 
 class CreateGroupRideScreen extends StatefulWidget {
   const CreateGroupRideScreen({super.key});
@@ -112,8 +111,12 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
       debugPrint('✅ Group created with ID: ${response['id']}');
       
       if (mounted) {
-        // Navigate to invite members screen with group ID
-        context.push('/invite-members', extra: response['id']);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => GroupInviteShareScreen(ride: response),
+          ),
+        );
       }
     } catch (e) {
       debugPrint('❌ Error creating group: $e');
@@ -165,6 +168,13 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  const SizedBox(height: 16),
                   const Text(
                     'Travelers',
                     style: TextStyle(

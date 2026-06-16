@@ -6,6 +6,10 @@
         android:label="frontend"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <meta-data android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyCTJ0oJBPjaMHWmROi7qRu4buwcLYrEeXg" />
+        <meta-data android:name="io.flutter.embedding.android.EnableImpeller"
+            android:value="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -26,6 +26,8 @@ import 'pages/psv/sacco_dashboard_screen.dart';
 import 'pages/reset_password_screen.dart';
 import 'pages/update_password_screen.dart';
 
+final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system);
+
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -63,15 +65,18 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     // ✅ WRAP WITH ProviderScope
     return ProviderScope(
-      child: MaterialApp(
-        navigatorKey: _navigatorKey,
-        title: 'Travelers App',
-        debugShowCheckedModeBanner: false,
+      child: Consumer(
+        builder: (context, ref, child) {
+          final themeMode = ref.watch(themeModeProvider);
+          return MaterialApp(
+            navigatorKey: _navigatorKey,
+            title: 'Travelers App',
+            debugShowCheckedModeBanner: false,
 
-        // ---------- THEME ----------
-        theme: AppThemes.lightTheme,
-        darkTheme: AppThemes.darkTheme,
-        themeMode: ThemeMode.system,
+            // ---------- THEME ----------
+            theme: AppThemes.lightTheme,
+            darkTheme: AppThemes.darkTheme,
+            themeMode: themeMode,
 
         // ---------- ROUTING ----------
         initialRoute: '/',
@@ -98,6 +103,8 @@ class _MyAppState extends State<MyApp> {
           '/reset_password': (context) => const ResetPasswordScreen(),
           '/update_password': (context) => const UpdatePasswordScreen(),
           '/admin-verification-review': (context) => const AdminVerificationReviewScreen(),
+        },
+          );
         },
       ),
     );

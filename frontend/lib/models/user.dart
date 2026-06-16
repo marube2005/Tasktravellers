@@ -11,6 +11,7 @@ class AppUser {
 		this.emergencyContactName,
 		this.emergencyContactPhone,
 		this.avatarUrl,
+		this.createdAt,
 	});
 
 	final String id;
@@ -24,6 +25,7 @@ class AppUser {
 	final String? emergencyContactName;
 	final String? emergencyContactPhone;
 	final String? avatarUrl;
+	final DateTime? createdAt;
 
 	factory AppUser.fromMap(Map<String, dynamic> map) {
 		return AppUser(
@@ -38,6 +40,9 @@ class AppUser {
 			emergencyContactName: map['emergency_contact_name'] as String?,
 			emergencyContactPhone: map['emergency_contact_phone'] as String?,
 			avatarUrl: map['avatar_url'] as String?,
+			createdAt: map['created_at'] != null
+					? DateTime.parse(map['created_at'] as String)
+					: null,
 		);
 	}
 
@@ -54,6 +59,7 @@ class AppUser {
 			'emergency_contact_name': emergencyContactName,
 			'emergency_contact_phone': emergencyContactPhone,
 			'avatar_url': avatarUrl,
+			'created_at': createdAt?.toIso8601String(),
 		};
 	}
 }
