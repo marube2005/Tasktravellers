@@ -61,8 +61,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -76,11 +79,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: theme.cardTheme.color ?? (isDarkMode ? AppColors.cardDark : Colors.white),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
+                      color: Colors.black.withValues(alpha: isDarkMode ? 0.2 : 0.06),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -96,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: GoogleFonts.manrope(
                           fontSize: 24,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.textLight,
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -104,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         'Welcome back — continue your journey.',
                         style: GoogleFonts.manrope(
                           fontSize: 14,
-                          color: AppColors.textGrey,
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -160,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           Text(
                             "Don't have an account?",
-                            style: GoogleFonts.manrope(color: AppColors.textGrey),
+                            style: GoogleFonts.manrope(color: Theme.of(context).colorScheme.onSurfaceVariant),
                           ),
                           TextButton(
                             onPressed: () =>
@@ -208,7 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
             fontSize: 28,
             height: 1.1,
             fontWeight: FontWeight.w800,
-            color: AppColors.textLight,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ],

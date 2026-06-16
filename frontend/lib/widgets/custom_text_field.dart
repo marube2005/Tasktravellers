@@ -51,22 +51,27 @@ class AppTextField extends StatelessWidget {
       onChanged: onChanged,
       onTap: onTap,
       style: TextStyle(
-        color: isDarkMode ? AppColors.textDark : AppColors.textLight,
+        color: Theme.of(context).colorScheme.onSurface,
         fontWeight: FontWeight.w500,
       ),
       cursorColor: AppColors.primary,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        prefixIcon: prefixIcon == null ? null : Icon(prefixIcon),
+        prefixIcon: prefixIcon == null
+            ? null
+            : Icon(prefixIcon, color: Theme.of(context).colorScheme.onSurfaceVariant),
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
+        fillColor: Theme.of(context).inputDecorationTheme.fillColor ??
+            (isDarkMode ? AppColors.cardDark : AppColors.cardLight),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         labelStyle: TextStyle(
-          color: isDarkMode ? AppColors.textGrey : AppColors.textGrey,
+          color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
         ),
-        hintStyle: const TextStyle(color: AppColors.textGrey),
+        hintStyle: TextStyle(
+          color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: AppColors.borderLight.withValues(alpha: 0.85)),

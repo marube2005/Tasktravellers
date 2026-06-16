@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart'; // For kIsWeb
-import 'dart:io' show File;
+import 'package:flutter/services.dart' show rootBundle;
 
 /// A central service class for initializing and providing access to the Supabase client.
 /// Use this service before any other service (Auth, Ride, etc.) is instantiated.
@@ -23,17 +23,10 @@ class SupabaseService {
   // INITIALIZATION
   // =========================================================================
 
-  /// Loads credentials from the .env file (mobile/desktop only).
-  Future<void> _loadEnvCredentialsFromFile() async {
+  /// Loads credentials from the .env file asset.
+  Future<void> _loadEnvCredentialsFromAsset() async {
     try {
-      // Get the .env file path (assuming it's in the project root)
-      final envFile = File('.env');
-      
-      if (!await envFile.exists()) {
-        throw Exception('.env file not found. Please create one with SUPABASE_URL and SUPABASE_ANON_KEY.');
-      }
-      
-      final envContent = await envFile.readAsString();
+      final envContent = await rootBundle.loadString('.env');
       final lines = envContent.split('\n');
       
       for (final line in lines) {
@@ -49,7 +42,7 @@ class SupabaseService {
         }
       }
       
-      debugPrint('Credentials loaded from .env file successfully.');
+      debugPrint('Credentials loaded from .env asset successfully.');
     } catch (e) {
       debugPrint('Error loading .env credentials: $e');
       rethrow;
@@ -71,7 +64,7 @@ class SupabaseService {
   }
 
   /// Initializes the Supabase client with credentials from appropriate source.
-  /// - Mobile/Desktop: Reads from .env file at runtime
+  /// - Mobile/Desktop: Reads from .env asset at runtime
   /// - Web: Reads from compile-time --dart-define values
   Future<void> initialize() async {
     try {
@@ -79,7 +72,7 @@ class SupabaseService {
       if (kIsWeb) {
         _loadEnvCredentialsFromDefines();
       } else {
-        await _loadEnvCredentialsFromFile();
+        await _loadEnvCredentialsFromAsset();
       }
       
       if (_supabaseUrl.isEmpty) {

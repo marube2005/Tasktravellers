@@ -21,6 +21,23 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
   bool _isLoading = false;
   bool _otpSent = false;
   String? _errorMessage;
+  bool _initialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      final args = ModalRoute.of(context)?.settings.arguments as String?;
+      if (args != null && args.isNotEmpty) {
+        _phoneController.text = args;
+        // Automatically send OTP code on screen entry
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _sendOtp();
+        });
+      }
+      _initialized = true;
+    }
+  }
 
   @override
   void dispose() {
@@ -36,7 +53,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
 
   /// Send OTP to the entered phone number
   Future<void> _sendOtp() async {
-    final phone = _phoneController.text.trim();
+    final phone = _phoneController.text.replaceAll(RegExp(r'\s+'), '').trim();
     if (phone.isEmpty) {
       setState(() => _errorMessage = 'Enter your phone number');
       return;
@@ -56,9 +73,20 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
     });
 
     try {
-      await Supabase.instance.client.auth.signInWithOtp(
-        phone: formattedPhone,
-      );
+      final client = Supabase.instance.client;
+      final isLoggedIn = client.auth.currentSession != null;
+
+      if (isLoggedIn) {
+        // If logged in, update the phone number attribute (sends verification SMS code)
+        await client.auth.updateUser(
+          UserAttributes(phone: formattedPhone),
+        );
+      } else {
+        // If not logged in, request passwordless sign in OTP
+        await client.auth.signInWithOtp(
+          phone: formattedPhone,
+        );
+      }
 
       if (mounted) {
         setState(() {
@@ -94,7 +122,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
       return;
     }
 
-    String formattedPhone = _phoneController.text.trim();
+    String formattedPhone = _phoneController.text.replaceAll(RegExp(r'\s+'), '').trim();
     if (formattedPhone.startsWith('0')) {
       formattedPhone = '+254${formattedPhone.substring(1)}';
     } else if (!formattedPhone.startsWith('+')) {
@@ -107,11 +135,30 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
     });
 
     try {
-      await Supabase.instance.client.auth.verifyOTP(
-        phone: formattedPhone,
-        token: otp,
-        type: OtpType.sms,
-      );
+      final client = Supabase.instance.client;
+      final isLoggedIn = client.auth.currentSession != null;
+
+      if (isLoggedIn) {
+        // If logged in, verify OTP with phoneChange type
+        await client.auth.verifyOTP(
+          phone: formattedPhone,
+          token: otp,
+          type: OtpType.phoneChange,
+        );
+
+        // Sync phone in the public.users database table
+        final userId = client.auth.currentUser?.id;
+        if (userId != null) {
+          await client.from('users').update({'phone': formattedPhone}).eq('id', userId);
+        }
+      } else {
+        // If not logged in, verify OTP with sms type (passwordless sign-in)
+        await client.auth.verifyOTP(
+          phone: formattedPhone,
+          token: otp,
+          type: OtpType.sms,
+        );
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

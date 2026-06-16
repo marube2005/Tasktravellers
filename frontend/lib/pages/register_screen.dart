@@ -43,10 +43,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Signup successful! Check your email to verify.'),
+              content: Text('Signup successful! Please verify your phone number.'),
             ),
           );
-          Navigator.pushReplacementNamed(context, '/email_verification');
+          Navigator.pushReplacementNamed(
+            context,
+            '/phone-verification',
+            arguments: _phoneController.text.trim(),
+          );
         })
         .catchError((Object e) {
           if (!mounted) return;
@@ -72,16 +76,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         centerTitle: true,
+        iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
         title: Text(
           'Create account',
           style: GoogleFonts.manrope(
-            color: AppColors.textLight,
+            color: theme.colorScheme.onSurface,
             fontWeight: FontWeight.w700,
             fontSize: 20,
           ),
@@ -94,11 +102,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.cardTheme.color ?? (isDarkMode ? AppColors.cardDark : Colors.white),
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
+                  color: Colors.black.withValues(alpha: isDarkMode ? 0.2 : 0.06),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -114,14 +122,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     style: GoogleFonts.manrope(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textLight,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Create your account to book reliable rides.',
                     style: GoogleFonts.manrope(
-                      color: AppColors.textGrey,
+                      color: theme.colorScheme.onSurfaceVariant,
                       fontSize: 15,
                     ),
                   ),
@@ -152,6 +160,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     hint: '0712345678',
                     prefixIcon: Icons.phone_outlined,
                     keyboardType: TextInputType.phone,
+                    validator: (val) {
+                      if (val == null || val.trim().isEmpty) {
+                        return 'Enter your phone number';
+                      }
+                      final clean = val.trim().replaceAll(RegExp(r'\s+'), '');
+                      if (clean.length < 9) {
+                        return 'Enter a valid phone number';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16),
                   AppTextField(
@@ -217,7 +235,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     children: [
                       Text(
                         'Already have an account? ',
-                        style: GoogleFonts.manrope(color: AppColors.textGrey),
+                        style: GoogleFonts.manrope(color: Theme.of(context).colorScheme.onSurfaceVariant),
                       ),
                       TextButton(
                         onPressed: () =>

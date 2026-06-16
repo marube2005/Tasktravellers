@@ -8,7 +8,7 @@ import 'pages/welcome_screen.dart';
 import 'pages/login_screen.dart';
 import 'pages/register_screen.dart';
 import 'pages/psv/role_selection_screen.dart';
-import 'pages/phone_login_screen.dart';
+import 'pages/otp_verification_screen.dart';
 import 'pages/passenger/passenger_profile_setup_screen.dart';
 import 'pages/psv/sacco_profile_setup_screen.dart';
 import 'pages/psv/sacco_verification_screen.dart';
@@ -81,7 +81,7 @@ class _MyAppState extends State<MyApp> {
           '/login': (context) => const LoginScreen(),
           '/register': (context) => const SignUpScreen(),
           '/email_verification': (context) => const EmailVerificationScreen(),
-          '/phone-verification': (context) => const PhoneVerificationScreen(),
+          '/phone-verification': (context) => const OtpVerificationScreen(),
           '/role-selection': (context) => const RoleSelectionScreen(),
           '/passenger-profile-setup': (context) => const PassengerProfileSetupScreen(),
           '/sacco-profile-setup': (context) => const SaccoProfileSetupScreen(),
