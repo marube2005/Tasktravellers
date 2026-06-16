@@ -288,7 +288,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             const SizedBox(width: 8),
             Text(
               'Travelers',
-              style: GoogleFonts.manrope(
+              style: GoogleFonts.poppins(
                 color: theme.colorScheme.onSurface,
                 fontWeight: FontWeight.w800,
                 fontSize: 18,
@@ -394,7 +394,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               
               Text(
                 'Verify Phone',
-                style: GoogleFonts.manrope(
+                style: GoogleFonts.poppins(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
                   color: theme.colorScheme.onSurface,
@@ -404,7 +404,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               Text(
                 'Enter the 6-digit code sent to\n$_phoneNumber',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.manrope(
+                style: GoogleFonts.poppins(
                   color: theme.colorScheme.onSurfaceVariant,
                   fontSize: 15,
                   height: 1.4,
@@ -425,7 +425,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   child: Text(
                     _errorMessage!,
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       color: isDarkMode ? Colors.red.shade300 : Colors.red.shade700,
                       fontSize: 14,
                     ),
@@ -447,7 +447,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       textAlign: TextAlign.center,
                       keyboardType: TextInputType.number,
                       maxLength: 1,
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.poppins(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: theme.colorScheme.onSurface,
@@ -506,7 +506,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 children: [
                   Text(
                     "Didn't receive code? ",
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       color: theme.colorScheme.onSurfaceVariant,
                       fontSize: 14,
                     ),
@@ -516,7 +516,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           onTap: _isLoading ? null : _resendOtp,
                           child: Text(
                             'Resend code',
-                            style: GoogleFonts.manrope(
+                            style: GoogleFonts.poppins(
                               color: theme.colorScheme.primary,
                               fontWeight: FontWeight.w700,
                               fontSize: 14,
@@ -525,7 +525,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                         )
                       : Text(
                           'Resend code in ${_formatTime(_secondsRemaining)}',
-                          style: GoogleFonts.manrope(
+                          style: GoogleFonts.poppins(
                             color: theme.colorScheme.onSurfaceVariant,
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
@@ -557,7 +557,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           children: [
                             Text(
                               'Verify & Continue',
-                              style: GoogleFonts.manrope(
+                              style: GoogleFonts.poppins(
                                 color: theme.colorScheme.onPrimary,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
@@ -588,7 +588,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   const SizedBox(width: 6),
                   Text(
                     'Secure end-to-end verification',
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                       fontSize: 13,
                       fontWeight: FontWeight.w500,

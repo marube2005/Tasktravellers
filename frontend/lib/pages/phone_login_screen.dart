@@ -193,7 +193,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
         centerTitle: true,
         title: Text(
           'Phone Verification',
-          style: GoogleFonts.manrope(
+          style: GoogleFonts.poppins(
             color: AppColors.textLight,
             fontWeight: FontWeight.w700,
             fontSize: 20,
@@ -217,7 +217,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
               const SizedBox(height: 24),
               Text(
                 _otpSent ? 'Enter verification code' : 'Verify your phone',
-                style: GoogleFonts.manrope(
+                style: GoogleFonts.poppins(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textLight,
@@ -228,7 +228,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                 _otpSent
                     ? 'We sent a 6-digit code to your phone number.'
                     : 'Enter your phone number to receive an OTP code.',
-                style: GoogleFonts.manrope(
+                style: GoogleFonts.poppins(
                   color: AppColors.textGrey,
                   fontSize: 15,
                 ),
@@ -247,7 +247,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                   ),
                   child: Text(
                     _errorMessage!,
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       color: Colors.red.shade700,
                       fontSize: 14,
                     ),
@@ -283,7 +283,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                         ? const CircularProgressIndicator(color: Colors.white)
                         : Text(
                             'Send OTP',
-                            style: GoogleFonts.manrope(
+                            style: GoogleFonts.poppins(
                               color: Colors.white,
                               fontSize: 17,
                               fontWeight: FontWeight.w600,
@@ -305,7 +305,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                         textAlign: TextAlign.center,
                         keyboardType: TextInputType.number,
                         maxLength: 1,
-                        style: GoogleFonts.manrope(
+                        style: GoogleFonts.poppins(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),
@@ -354,7 +354,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                         ? const CircularProgressIndicator(color: Colors.white)
                         : Text(
                             'Verify',
-                            style: GoogleFonts.manrope(
+                            style: GoogleFonts.poppins(
                               color: Colors.white,
                               fontSize: 17,
                               fontWeight: FontWeight.w600,
@@ -370,7 +370,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                     onPressed: _isLoading ? null : _sendOtp,
                     child: Text(
                       'Resend code',
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.poppins(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w600,
                       ),
@@ -388,7 +388,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                     },
                   child: Text(
                     'Skip for now',
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       color: AppColors.textGrey,
                       fontSize: 14,
                     ),

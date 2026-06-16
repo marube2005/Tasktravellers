@@ -106,7 +106,7 @@ class _RideChatScreenState extends State<RideChatScreen> {
                           children: [
                             Text(
                               text,
-                              style: GoogleFonts.manrope(
+                              style: GoogleFonts.poppins(
                                 color: isMine ? Colors.white : AppColors.textLight,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -114,7 +114,7 @@ class _RideChatScreenState extends State<RideChatScreen> {
                             const SizedBox(height: 4),
                             Text(
                               message['created_at']?.toString() ?? '',
-                              style: GoogleFonts.manrope(
+                              style: GoogleFonts.poppins(
                                 fontSize: 10,
                                 color: isMine ? Colors.white70 : AppColors.textGrey,
                               ),

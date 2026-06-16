@@ -126,7 +126,7 @@ class _PassengerProfileSetupScreenState
         centerTitle: true,
         title: Text(
           'Set Up Profile',
-          style: GoogleFonts.manrope(
+          style: GoogleFonts.poppins(
             color: AppColors.textLight,
             fontWeight: FontWeight.w700,
             fontSize: 20,
@@ -143,7 +143,7 @@ class _PassengerProfileSetupScreenState
               children: [
                 Text(
                   'Complete your profile',
-                  style: GoogleFonts.manrope(
+                  style: GoogleFonts.poppins(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textLight,
@@ -152,7 +152,7 @@ class _PassengerProfileSetupScreenState
                 const SizedBox(height: 8),
                 Text(
                   'Help us personalise your experience.',
-                  style: GoogleFonts.manrope(
+                  style: GoogleFonts.poppins(
                     color: AppColors.textGrey,
                     fontSize: 15,
                   ),
@@ -173,7 +173,7 @@ class _PassengerProfileSetupScreenState
                 Center(
                   child: Text(
                     'Tap to add profile photo',
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       color: AppColors.textGrey,
                       fontSize: 13,
                     ),
@@ -231,7 +231,7 @@ class _PassengerProfileSetupScreenState
                           const SizedBox(width: 8),
                           Text(
                             'Emergency Contact',
-                            style: GoogleFonts.manrope(
+                            style: GoogleFonts.poppins(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                               color: Colors.orange.shade800,
@@ -242,7 +242,7 @@ class _PassengerProfileSetupScreenState
                       const SizedBox(height: 4),
                       Text(
                         'Someone we can reach in case of an emergency.',
-                        style: GoogleFonts.manrope(
+                        style: GoogleFonts.poppins(
                           fontSize: 13,
                           color: Colors.orange.shade600,
                         ),
@@ -283,7 +283,7 @@ class _PassengerProfileSetupScreenState
                         ? const CircularProgressIndicator(color: Colors.white)
                         : Text(
                             'Continue',
-                            style: GoogleFonts.manrope(
+                            style: GoogleFonts.poppins(
                               color: Colors.white,
                               fontSize: 17,
                               fontWeight: FontWeight.w600,
@@ -301,7 +301,7 @@ class _PassengerProfileSetupScreenState
                     },
                     child: Text(
                       'Skip for now',
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.poppins(
                         color: AppColors.textGrey,
                         fontSize: 14,
                       ),
@@ -320,7 +320,7 @@ class _PassengerProfileSetupScreenState
   Widget _buildLabel(String text) {
     return Text(
       text,
-      style: GoogleFonts.manrope(
+      style: GoogleFonts.poppins(
         fontWeight: FontWeight.w600,
         fontSize: 14,
         color: AppColors.textLight,

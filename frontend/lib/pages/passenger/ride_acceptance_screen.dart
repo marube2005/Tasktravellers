@@ -121,7 +121,7 @@ class _RideAcceptanceScreenState extends State<RideAcceptanceScreen> {
             children: [
               Text(
                 'OTP ride acceptance',
-                style: GoogleFonts.manrope(
+                style: GoogleFonts.poppins(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
                   color: AppColors.textLight,
@@ -130,7 +130,7 @@ class _RideAcceptanceScreenState extends State<RideAcceptanceScreen> {
               const SizedBox(height: 8),
               Text(
                 'Enter the shared ride code before confirming the vehicle.',
-                style: GoogleFonts.manrope(color: AppColors.textGrey),
+                style: GoogleFonts.poppins(color: AppColors.textGrey),
               ),
               const SizedBox(height: 24),
               AppTextField(
@@ -195,7 +195,7 @@ class _RideAcceptanceScreenState extends State<RideAcceptanceScreen> {
                   ),
                   child: Text(
                     '${_ride!['origin'] ?? 'Origin'} → ${_ride!['destination'] ?? 'Destination'}',
-                    style: GoogleFonts.manrope(fontWeight: FontWeight.w700),
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w700),
                   ),
                 ),
               const SizedBox(height: 24),

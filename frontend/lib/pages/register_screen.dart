@@ -88,7 +88,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
         title: Text(
           'Create account',
-          style: GoogleFonts.manrope(
+          style: GoogleFonts.poppins(
             color: theme.colorScheme.onSurface,
             fontWeight: FontWeight.w700,
             fontSize: 20,
@@ -119,7 +119,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 children: [
                   Text(
                     'Join Nenda',
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
                       color: theme.colorScheme.onSurface,
@@ -128,7 +128,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   const SizedBox(height: 8),
                   Text(
                     'Create your account to book reliable rides.',
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       color: theme.colorScheme.onSurfaceVariant,
                       fontSize: 15,
                     ),
@@ -207,7 +207,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             padding: const EdgeInsets.only(top: 12),
                             child: Text(
                               'I accept the Terms & Conditions and understand that no prepayment is required for the MVP.',
-                              style: GoogleFonts.manrope(
+                              style: GoogleFonts.poppins(
                                 color: AppColors.textGrey,
                                 fontSize: 13,
                                 height: 1.4,
@@ -235,7 +235,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     children: [
                       Text(
                         'Already have an account? ',
-                        style: GoogleFonts.manrope(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        style: GoogleFonts.poppins(color: Theme.of(context).colorScheme.onSurfaceVariant),
                       ),
                       TextButton(
                         onPressed: () =>

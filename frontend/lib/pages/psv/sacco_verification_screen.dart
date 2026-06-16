@@ -215,7 +215,7 @@ class _SaccoVerificationScreenState extends State<SaccoVerificationScreen> {
         centerTitle: true,
         title: Text(
           'Verification',
-          style: GoogleFonts.manrope(
+          style: GoogleFonts.poppins(
             color: AppColors.textLight,
             fontWeight: FontWeight.w700,
             fontSize: 20,
@@ -234,7 +234,7 @@ class _SaccoVerificationScreenState extends State<SaccoVerificationScreen> {
 
               Text(
                 'Required Documents',
-                style: GoogleFonts.manrope(
+                style: GoogleFonts.poppins(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textLight,
@@ -243,7 +243,7 @@ class _SaccoVerificationScreenState extends State<SaccoVerificationScreen> {
               const SizedBox(height: 8),
               Text(
                 'Upload the following documents for verification.',
-                style: GoogleFonts.manrope(
+                style: GoogleFonts.poppins(
                   color: AppColors.textGrey,
                   fontSize: 14,
                 ),
@@ -294,7 +294,7 @@ class _SaccoVerificationScreenState extends State<SaccoVerificationScreen> {
                     ),
                     child: Text(
                       'Go to Dashboard',
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.poppins(
                         color: Colors.white,
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
@@ -318,7 +318,7 @@ class _SaccoVerificationScreenState extends State<SaccoVerificationScreen> {
                         ? const CircularProgressIndicator(color: Colors.white)
                         : Text(
                             'Submit for Review',
-                            style: GoogleFonts.manrope(
+                            style: GoogleFonts.poppins(
                               color: Colors.white,
                               fontSize: 17,
                               fontWeight: FontWeight.w600,
@@ -337,7 +337,7 @@ class _SaccoVerificationScreenState extends State<SaccoVerificationScreen> {
                     },
                     child: Text(
                       'Continue to dashboard (pending review)',
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.poppins(
                         color: AppColors.textGrey,
                         fontSize: 14,
                       ),
@@ -407,7 +407,7 @@ class _SaccoVerificationScreenState extends State<SaccoVerificationScreen> {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.manrope(
+                  style: GoogleFonts.poppins(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                     color: textColor,
@@ -416,7 +416,7 @@ class _SaccoVerificationScreenState extends State<SaccoVerificationScreen> {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: GoogleFonts.manrope(
+                  style: GoogleFonts.poppins(
                     fontSize: 13,
                     color: textColor,
                   ),
@@ -469,7 +469,7 @@ class _SaccoVerificationScreenState extends State<SaccoVerificationScreen> {
               children: [
                 Text(
                   label,
-                  style: GoogleFonts.manrope(
+                  style: GoogleFonts.poppins(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
@@ -477,7 +477,7 @@ class _SaccoVerificationScreenState extends State<SaccoVerificationScreen> {
                 const SizedBox(height: 2),
                 Text(
                   isUploaded ? 'Uploaded' : description,
-                  style: GoogleFonts.manrope(
+                  style: GoogleFonts.poppins(
                     fontSize: 12,
                     color: isUploaded ? Colors.green : AppColors.textGrey,
                   ),
@@ -490,7 +490,7 @@ class _SaccoVerificationScreenState extends State<SaccoVerificationScreen> {
               onPressed: _isLoading ? null : () => _uploadDocument(docType),
               child: Text(
                 isUploaded ? 'Replace' : 'Upload',
-                style: GoogleFonts.manrope(
+                style: GoogleFonts.poppins(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w600,
                 ),

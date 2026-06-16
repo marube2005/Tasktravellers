@@ -21,7 +21,7 @@ class WelcomeScreen extends StatelessWidget {
               // Top title
               Text(
                 'Nenda',
-                style: GoogleFonts.manrope(
+                style: GoogleFonts.poppins(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
                   color: theme.colorScheme.onSurface,
@@ -53,7 +53,7 @@ class WelcomeScreen extends StatelessWidget {
                   Text(
                     'Connect with Matatu Saccos',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
                       color: theme.colorScheme.onSurface,
@@ -63,7 +63,7 @@ class WelcomeScreen extends StatelessWidget {
                   Text(
                     'Find group travel and on-demand rides with trusted Matatu Saccos in Kenya.',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       fontSize: 15,
                       color: theme.colorScheme.onSurfaceVariant,
                       height: 1.4,
@@ -90,7 +90,7 @@ class WelcomeScreen extends StatelessWidget {
                       ),
                       child: Text(
                         'Log In',
-                        style: GoogleFonts.manrope(
+                        style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: theme.colorScheme.onPrimary,
@@ -115,7 +115,7 @@ class WelcomeScreen extends StatelessWidget {
                       ),
                       child: Text(
                         'Sign Up',
-                        style: GoogleFonts.manrope(
+                        style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: theme.colorScheme.onSurface,

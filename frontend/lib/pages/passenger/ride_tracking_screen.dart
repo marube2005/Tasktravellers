@@ -409,7 +409,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                     const SizedBox(height: 16),
                     Text(
                       'Live Tracking Screen',
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.poppins(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textLight,
@@ -418,7 +418,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                     const SizedBox(height: 8),
                     Text(
                       'Maps are simulated dynamically below on web platforms.',
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.poppins(
                         color: AppColors.textGrey,
                       ),
                     ),
@@ -530,7 +530,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                 children: [
                   Text(
                     _rideStatus.toUpperCase(),
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
                       color: _rideStatus == 'Arrived'
@@ -546,7 +546,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                         : (_rideStatus == 'Arrived'
                             ? 'Your matatu has arrived!'
                             : 'ETA: $_etaText'),
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
                       color: theme.colorScheme.onSurface,
@@ -563,7 +563,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                   ),
                   child: Text(
                     _locationService.formatDistance(_distanceRemaining),
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.primary,
                     ),
@@ -601,7 +601,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                   children: [
                     Text(
                       'Peter Kamau (Sacco Driver)',
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.poppins(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                         color: theme.colorScheme.onSurface,
@@ -610,7 +610,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                     const SizedBox(height: 2),
                     Text(
                       'Rongai Express • 14-seater • KCA 789X',
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.poppins(
                         fontSize: 13,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -625,7 +625,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                   const SizedBox(width: 2),
                   Text(
                     '4.8',
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.onSurface,
                     ),
@@ -656,7 +656,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                   icon: const Icon(Icons.sos, size: 20),
                   label: Text(
                     _sosTriggered ? 'SOS Sent' : 'SOS',
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
                     ),

@@ -96,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       Text(
                         'Sign in',
-                        style: GoogleFonts.manrope(
+                        style: GoogleFonts.poppins(
                           fontSize: 24,
                           fontWeight: FontWeight.w800,
                           color: theme.colorScheme.onSurface,
@@ -105,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 6),
                       Text(
                         'Welcome back — continue your journey.',
-                        style: GoogleFonts.manrope(
+                        style: GoogleFonts.poppins(
                           fontSize: 14,
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -163,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           Text(
                             "Don't have an account?",
-                            style: GoogleFonts.manrope(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                            style: GoogleFonts.poppins(color: Theme.of(context).colorScheme.onSurfaceVariant),
                           ),
                           TextButton(
                             onPressed: () =>
@@ -198,7 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 20),
         Text(
           'Travelers App',
-          style: GoogleFonts.manrope(
+          style: GoogleFonts.poppins(
             fontSize: 16,
             fontWeight: FontWeight.w600,
             color: AppColors.primary,
@@ -207,7 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 8),
         Text(
           'Move smarter with a cleaner ride experience.',
-          style: GoogleFonts.manrope(
+          style: GoogleFonts.poppins(
             fontSize: 28,
             height: 1.1,
             fontWeight: FontWeight.w800,

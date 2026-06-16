@@ -75,7 +75,7 @@ class _GroupInviteShareScreenState extends State<GroupInviteShareScreen> {
                 children: [
                   Text(
                     'Share this ride',
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textLight,
@@ -84,7 +84,7 @@ class _GroupInviteShareScreenState extends State<GroupInviteShareScreen> {
                   const SizedBox(height: 8),
                   Text(
                     'Passengers can join through the invite link and the sacco can use the acceptance code.',
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       color: AppColors.textGrey,
                     ),
                   ),
@@ -105,7 +105,7 @@ class _GroupInviteShareScreenState extends State<GroupInviteShareScreen> {
                   const SizedBox(height: 20),
                   Text(
                     'Invite link',
-                    style: GoogleFonts.manrope(fontWeight: FontWeight.w700),
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 8),
                   SelectableText(_inviteLink),
@@ -129,7 +129,7 @@ class _GroupInviteShareScreenState extends State<GroupInviteShareScreen> {
                   const SizedBox(height: 24),
                   Text(
                     'Acceptance code',
-                    style: GoogleFonts.manrope(fontWeight: FontWeight.w700),
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 8),
                   Container(
@@ -141,7 +141,7 @@ class _GroupInviteShareScreenState extends State<GroupInviteShareScreen> {
                     ),
                     child: Text(
                       _acceptanceCode.isEmpty ? 'Not generated' : _acceptanceCode,
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.poppins(
                         fontSize: 24,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 4,
@@ -210,7 +210,7 @@ class _InfoCard extends StatelessWidget {
         children: [
           Text(
             title,
-            style: GoogleFonts.manrope(
+            style: GoogleFonts.poppins(
               color: AppColors.textGrey,
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -219,7 +219,7 @@ class _InfoCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             value,
-            style: GoogleFonts.manrope(
+            style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: AppColors.textLight,

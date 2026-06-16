@@ -126,7 +126,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
 
               Text(
                 'Enable Permissions',
-                style: GoogleFonts.manrope(
+                style: GoogleFonts.poppins(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textLight,
@@ -136,7 +136,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
               Text(
                 'We need a few permissions to give you the best experience.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.manrope(
+                style: GoogleFonts.poppins(
                   color: AppColors.textGrey,
                   fontSize: 15,
                 ),
@@ -179,7 +179,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
                   ),
                   child: Text(
                     'Continue',
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       color: Colors.white,
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
@@ -194,7 +194,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
                 onPressed: _continue,
                 child: Text(
                   'Skip for now',
-                  style: GoogleFonts.manrope(
+                  style: GoogleFonts.poppins(
                     color: AppColors.textGrey,
                     fontSize: 14,
                   ),
@@ -257,7 +257,7 @@ class _PermissionTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
                     ),
@@ -265,7 +265,7 @@ class _PermissionTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       fontSize: 13,
                       color: AppColors.textGrey,
                     ),

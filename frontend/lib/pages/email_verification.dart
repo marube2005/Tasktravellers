@@ -20,7 +20,7 @@ class EmailVerificationScreen extends StatelessWidget {
               const SizedBox(height: 20),
               Text(
                 "Verify your email",
-                style: GoogleFonts.manrope(
+                style: GoogleFonts.poppins(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
@@ -29,7 +29,7 @@ class EmailVerificationScreen extends StatelessWidget {
               Text(
                 "We’ve sent a verification link to your email. Please check your inbox or spam folder.",
                 textAlign: TextAlign.center,
-                style: GoogleFonts.manrope(color: AppColors.textGrey),
+                style: GoogleFonts.poppins(color: AppColors.textGrey),
               ),
               const SizedBox(height: 40),
               ElevatedButton(
@@ -44,7 +44,7 @@ class EmailVerificationScreen extends StatelessWidget {
                 ),
                 child: Text(
                   "Go to Login",
-                  style: GoogleFonts.manrope(
+                  style: GoogleFonts.poppins(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
                   ),

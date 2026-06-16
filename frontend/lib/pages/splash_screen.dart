@@ -85,7 +85,7 @@ class _SplashScreenState extends State<SplashScreen> {
             const SizedBox(height: 24),
             Text(
               'Nenda',
-              style: GoogleFonts.manrope(
+              style: GoogleFonts.poppins(
                 fontSize: 36,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -94,7 +94,7 @@ class _SplashScreenState extends State<SplashScreen> {
             const SizedBox(height: 8),
             Text(
               'Travel together, save together',
-              style: GoogleFonts.manrope(
+              style: GoogleFonts.poppins(
                 fontSize: 16,
                 color: Colors.white70,
               ),

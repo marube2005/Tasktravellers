@@ -127,7 +127,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           const SizedBox(height: 20),
            Text(
              'Reset Password',
-             style: GoogleFonts.manrope(
+             style: GoogleFonts.poppins(
                fontSize: 28,
                fontWeight: FontWeight.bold,
                color: AppColors.textLight,
@@ -136,7 +136,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
            const SizedBox(height: 8),
            Text(
              'Enter your email address and we\'ll send you a link to reset your password.',
-             style: GoogleFonts.manrope(
+             style: GoogleFonts.poppins(
                fontSize: 16,
                color: AppColors.textGrey,
              ),

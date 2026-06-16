@@ -114,7 +114,7 @@ class _SaccoProfileSetupScreenState extends State<SaccoProfileSetupScreen> {
         centerTitle: true,
         title: Text(
           'Sacco Registration',
-          style: GoogleFonts.manrope(
+          style: GoogleFonts.poppins(
             color: AppColors.textLight,
             fontWeight: FontWeight.w700,
             fontSize: 20,
@@ -131,7 +131,7 @@ class _SaccoProfileSetupScreenState extends State<SaccoProfileSetupScreen> {
               children: [
                 Text(
                   'Register your Sacco',
-                  style: GoogleFonts.manrope(
+                  style: GoogleFonts.poppins(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textLight,
@@ -140,7 +140,7 @@ class _SaccoProfileSetupScreenState extends State<SaccoProfileSetupScreen> {
                 const SizedBox(height: 8),
                 Text(
                   'Provide your Sacco details to get started.',
-                  style: GoogleFonts.manrope(
+                  style: GoogleFonts.poppins(
                     color: AppColors.textGrey,
                     fontSize: 15,
                   ),
@@ -161,7 +161,7 @@ class _SaccoProfileSetupScreenState extends State<SaccoProfileSetupScreen> {
                 Center(
                   child: Text(
                     'Tap to add Sacco logo',
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       color: AppColors.textGrey,
                       fontSize: 13,
                     ),
@@ -261,7 +261,7 @@ class _SaccoProfileSetupScreenState extends State<SaccoProfileSetupScreen> {
                         ? const CircularProgressIndicator(color: Colors.white)
                         : Text(
                             'Continue to Verification',
-                            style: GoogleFonts.manrope(
+                            style: GoogleFonts.poppins(
                               color: Colors.white,
                               fontSize: 17,
                               fontWeight: FontWeight.w600,
@@ -292,7 +292,7 @@ class _SaccoProfileSetupScreenState extends State<SaccoProfileSetupScreen> {
           const SizedBox(width: 10),
           Text(
             title,
-            style: GoogleFonts.manrope(
+            style: GoogleFonts.poppins(
               fontWeight: FontWeight.bold,
               fontSize: 16,
               color: AppColors.primary,
@@ -306,7 +306,7 @@ class _SaccoProfileSetupScreenState extends State<SaccoProfileSetupScreen> {
   Widget _buildLabel(String text) {
     return Text(
       text,
-      style: GoogleFonts.manrope(
+      style: GoogleFonts.poppins(
         fontWeight: FontWeight.w600,
         fontSize: 14,
         color: AppColors.textLight,

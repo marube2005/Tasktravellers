@@ -80,7 +80,7 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
         const SizedBox(height: 24),
         Text(
           'Password Updated!',
-          style: GoogleFonts.manrope(
+          style: GoogleFonts.poppins(
             fontSize: 24,
             fontWeight: FontWeight.bold,
             color: AppColors.textLight,
@@ -90,7 +90,7 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
         Text(
           'Your password has been successfully updated.\nYou can now login with your new password.',
           textAlign: TextAlign.center,
-          style: GoogleFonts.manrope(
+          style: GoogleFonts.poppins(
             fontSize: 16,
             color: AppColors.textGrey,
           ),
@@ -123,7 +123,7 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
           const SizedBox(height: 20),
           Text(
             'Set New Password',
-            style: GoogleFonts.manrope(
+            style: GoogleFonts.poppins(
               fontSize: 28,
               fontWeight: FontWeight.bold,
               color: AppColors.textLight,
@@ -132,7 +132,7 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
           const SizedBox(height: 8),
           Text(
             'Please enter your new password below.',
-            style: GoogleFonts.manrope(
+            style: GoogleFonts.poppins(
               fontSize: 16,
               color: AppColors.textGrey,
             ),

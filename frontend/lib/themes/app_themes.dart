@@ -62,7 +62,7 @@ class AppThemes {
       backgroundColor: AppColors.surfaceContainerLowest,
       elevation: 0,
       centerTitle: true,
-      titleTextStyle: GoogleFonts.lexend(
+      titleTextStyle: GoogleFonts.poppins(
         fontSize: 20,
         fontWeight: FontWeight.w600,
         color: AppColors.onSurface,
@@ -81,7 +81,7 @@ class AppThemes {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        textStyle: GoogleFonts.inter(
+        textStyle: GoogleFonts.poppins(
           fontSize: 14,
           fontWeight: FontWeight.w600,
         ),
@@ -118,42 +118,42 @@ class AppThemes {
   );
 
   static final TextTheme _lightTextTheme = TextTheme(
-    displayLarge: GoogleFonts.lexend(
+    displayLarge: GoogleFonts.poppins(
       fontSize: 40,
       fontWeight: FontWeight.w700,
       color: AppColors.onSurface,
     ),
-    displayMedium: GoogleFonts.lexend(
+    displayMedium: GoogleFonts.poppins(
       fontSize: 32,
       fontWeight: FontWeight.w600,
       color: AppColors.onSurface,
     ),
-    displaySmall: GoogleFonts.lexend(
+    displaySmall: GoogleFonts.poppins(
       fontSize: 28,
       fontWeight: FontWeight.w600,
       color: AppColors.onSurface,
     ),
-    headlineLarge: GoogleFonts.lexend(
+    headlineLarge: GoogleFonts.poppins(
       fontSize: 24,
       fontWeight: FontWeight.w600,
       color: AppColors.onSurface,
     ),
-    bodyLarge: GoogleFonts.inter(
+    bodyLarge: GoogleFonts.poppins(
       fontSize: 16,
       fontWeight: FontWeight.w400,
       color: AppColors.onSurface,
     ),
-    bodyMedium: GoogleFonts.inter(
+    bodyMedium: GoogleFonts.poppins(
       fontSize: 14,
       fontWeight: FontWeight.w400,
       color: AppColors.onSurface,
     ),
-    labelLarge: GoogleFonts.inter(
+    labelLarge: GoogleFonts.poppins(
       fontSize: 14,
       fontWeight: FontWeight.w600,
       color: AppColors.onSurface,
     ),
-    labelMedium: GoogleFonts.inter(
+    labelMedium: GoogleFonts.poppins(
       fontSize: 12,
       fontWeight: FontWeight.w500,
       color: AppColors.onSurfaceVariant,
@@ -198,7 +198,7 @@ static final ThemeData darkTheme = ThemeData(
     backgroundColor: AppColors.cardDark,
     elevation: 0,
     centerTitle: true,
-    titleTextStyle: GoogleFonts.lexend(
+    titleTextStyle: GoogleFonts.poppins(
       fontSize: 20,
       fontWeight: FontWeight.w600,
       color: AppColors.inverseOnSurface,
@@ -250,42 +250,42 @@ static final ThemeData darkTheme = ThemeData(
 );
 
 static final TextTheme _darkTextTheme = TextTheme(
-  displayLarge: GoogleFonts.lexend(
+  displayLarge: GoogleFonts.poppins(
     fontSize: 40,
     fontWeight: FontWeight.w700,
     color: AppColors.inverseOnSurface,
   ),
-  displayMedium: GoogleFonts.lexend(
+  displayMedium: GoogleFonts.poppins(
     fontSize: 32,
     fontWeight: FontWeight.w600,
     color: AppColors.inverseOnSurface,
   ),
-  displaySmall: GoogleFonts.lexend(
+  displaySmall: GoogleFonts.poppins(
     fontSize: 28,
     fontWeight: FontWeight.w600,
     color: AppColors.inverseOnSurface,
   ),
-  headlineLarge: GoogleFonts.lexend(
+  headlineLarge: GoogleFonts.poppins(
     fontSize: 24,
     fontWeight: FontWeight.w600,
     color: AppColors.inverseOnSurface,
   ),
-  bodyLarge: GoogleFonts.inter(
+  bodyLarge: GoogleFonts.poppins(
     fontSize: 16,
     fontWeight: FontWeight.w400,
     color: AppColors.inverseOnSurface,
   ),
-  bodyMedium: GoogleFonts.inter(
+  bodyMedium: GoogleFonts.poppins(
     fontSize: 14,
     fontWeight: FontWeight.w400,
     color: AppColors.inverseOnSurface,
   ),
-  labelLarge: GoogleFonts.inter(
+  labelLarge: GoogleFonts.poppins(
     fontSize: 14,
     fontWeight: FontWeight.w600,
     color: AppColors.inverseOnSurface,
   ),
-  labelMedium: GoogleFonts.inter(
+  labelMedium: GoogleFonts.poppins(
     fontSize: 12,
     fontWeight: FontWeight.w500,
     color: AppColors.outlineVariant,

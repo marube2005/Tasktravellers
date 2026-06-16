@@ -109,7 +109,7 @@ class _PassengerDashboardScreenState extends State<PassengerDashboardScreen> {
           const SizedBox(height: 4),
           Text(
             label,
-            style: GoogleFonts.manrope(
+            style: GoogleFonts.poppins(
               fontSize: 12,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
               color: isSelected 
@@ -219,7 +219,7 @@ class _HomeTabState extends State<_HomeTab> {
                             const SizedBox(width: 8),
                             Text(
                               'Travelers',
-                              style: GoogleFonts.manrope(
+                              style: GoogleFonts.poppins(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w800,
                                 color: AppColors.primary,
@@ -272,7 +272,7 @@ class _HomeTabState extends State<_HomeTab> {
                     // Greetings
                     Text(
                       'Hujambo, $_userName!',
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.poppins(
                         fontSize: 26,
                         fontWeight: FontWeight.w800,
                         color: theme.colorScheme.onSurface,
@@ -281,7 +281,7 @@ class _HomeTabState extends State<_HomeTab> {
                     const SizedBox(height: 4),
                     Text(
                       'Where are we headed today?',
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.poppins(
                         fontSize: 14,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -318,7 +318,7 @@ class _HomeTabState extends State<_HomeTab> {
                           children: [
                             Text(
                               'Create Group Ride',
-                              style: GoogleFonts.manrope(
+                              style: GoogleFonts.poppins(
                                 color: Colors.white,
                                 fontSize: 22,
                                 fontWeight: FontWeight.w800,
@@ -327,7 +327,7 @@ class _HomeTabState extends State<_HomeTab> {
                             const SizedBox(height: 4),
                             Text(
                               'Coordinate with friends and split the\nfare seamlessly.',
-                              style: GoogleFonts.manrope(
+                              style: GoogleFonts.poppins(
                                 color: Colors.white.withValues(alpha: 0.85),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
@@ -363,7 +363,7 @@ class _HomeTabState extends State<_HomeTab> {
                       children: [
                         Text(
                           'My Active Groups',
-                          style: GoogleFonts.manrope(
+                          style: GoogleFonts.poppins(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
                             color: theme.colorScheme.onSurface,
@@ -373,7 +373,7 @@ class _HomeTabState extends State<_HomeTab> {
                           onPressed: () {},
                           child: Text(
                             'See all',
-                            style: GoogleFonts.manrope(
+                            style: GoogleFonts.poppins(
                               color: AppColors.primary,
                               fontWeight: FontWeight.w700,
                             ),
@@ -388,7 +388,7 @@ class _HomeTabState extends State<_HomeTab> {
                     // Recent Trips
                     Text(
                       'Recent Trips',
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.poppins(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
                         color: theme.colorScheme.onSurface,
@@ -460,7 +460,7 @@ class _HomeTabState extends State<_HomeTab> {
                   const SizedBox(width: 6),
                   Text(
                     'ON TRACK',
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                       color: Colors.green,
@@ -488,7 +488,7 @@ class _HomeTabState extends State<_HomeTab> {
                     const SizedBox(width: 4),
                     Text(
                       status.toUpperCase(),
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.poppins(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                         color: Colors.green,
@@ -504,7 +504,7 @@ class _HomeTabState extends State<_HomeTab> {
           // Route Title
           Text(
             '$origin to $destination',
-            style: GoogleFonts.manrope(
+            style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: theme.colorScheme.onSurface,
@@ -522,7 +522,7 @@ class _HomeTabState extends State<_HomeTab> {
                   const SizedBox(width: 8),
                   Text(
                     '+$currentPassengers',
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: theme.colorScheme.onSurfaceVariant,
@@ -535,7 +535,7 @@ class _HomeTabState extends State<_HomeTab> {
                 children: [
                   Text(
                     'Confirmed',
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       fontSize: 11,
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -543,7 +543,7 @@ class _HomeTabState extends State<_HomeTab> {
                   const SizedBox(height: 2),
                   Text(
                     '$currentPassengers/$maxPassengers',
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.onSurface,
@@ -713,7 +713,7 @@ class _HomeTabState extends State<_HomeTab> {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.manrope(
+                  style: GoogleFonts.poppins(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                     color: theme.colorScheme.onSurface,
@@ -722,7 +722,7 @@ class _HomeTabState extends State<_HomeTab> {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: GoogleFonts.manrope(
+                  style: GoogleFonts.poppins(
                     fontSize: 12,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -735,7 +735,7 @@ class _HomeTabState extends State<_HomeTab> {
             children: [
               Text(
                 timeAgo,
-                style: GoogleFonts.manrope(
+                style: GoogleFonts.poppins(
                   fontSize: 11,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -800,7 +800,7 @@ class _MyTripsTabState extends State<_MyTripsTab> {
       appBar: AppBar(
         title: Text(
           'My Trips',
-          style: GoogleFonts.manrope(fontWeight: FontWeight.bold),
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         elevation: 0,
@@ -835,7 +835,7 @@ class _MyTripsTabState extends State<_MyTripsTab> {
             const SizedBox(height: 16),
             Text(
               'No upcoming trips',
-              style: GoogleFonts.manrope(
+              style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -893,7 +893,7 @@ class _MyTripsTabState extends State<_MyTripsTab> {
                 ),
                 child: Text(
                   status.toUpperCase(),
-                  style: GoogleFonts.manrope(
+                  style: GoogleFonts.poppins(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                     color: AppColors.primary,
@@ -902,7 +902,7 @@ class _MyTripsTabState extends State<_MyTripsTab> {
               ),
               Text(
                 'Ksh $fare',
-                style: GoogleFonts.manrope(
+                style: GoogleFonts.poppins(
                   fontWeight: FontWeight.bold,
                   color: AppColors.primary,
                 ),
@@ -917,7 +917,7 @@ class _MyTripsTabState extends State<_MyTripsTab> {
               Expanded(
                 child: Text(
                   '$origin → $destination',
-                  style: GoogleFonts.manrope(
+                  style: GoogleFonts.poppins(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
@@ -1018,7 +1018,7 @@ class _ProfileTab extends ConsumerWidget {
                         const SizedBox(width: 12),
                         Text(
                           'SafariSync',
-                          style: GoogleFonts.manrope(
+                          style: GoogleFonts.poppins(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
                             color: AppColors.primary,
@@ -1081,7 +1081,7 @@ class _ProfileTab extends ConsumerWidget {
                                 children: [
                                   Text(
                                     '4.9',
-                                    style: GoogleFonts.manrope(
+                                    style: GoogleFonts.poppins(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
@@ -1099,7 +1099,7 @@ class _ProfileTab extends ConsumerWidget {
                       // Full name
                       Text(
                         name,
-                        style: GoogleFonts.manrope(
+                        style: GoogleFonts.poppins(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: theme.colorScheme.onSurface,
@@ -1109,7 +1109,7 @@ class _ProfileTab extends ConsumerWidget {
                       // Sub-info
                       Text(
                         subtext,
-                        style: GoogleFonts.manrope(
+                        style: GoogleFonts.poppins(
                           fontSize: 13,
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -1199,7 +1199,7 @@ class _ProfileTab extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           'Appearance',
-                          style: GoogleFonts.manrope(
+                          style: GoogleFonts.poppins(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                             color: theme.colorScheme.onSurface,
@@ -1231,7 +1231,7 @@ class _ProfileTab extends ConsumerWidget {
                     icon: const Icon(Icons.logout_rounded, color: Colors.red, size: 20),
                     label: Text(
                       'Sign Out',
-                      style: GoogleFonts.manrope(
+                      style: GoogleFonts.poppins(
                         color: Colors.red,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -1290,7 +1290,7 @@ class _ProfileTab extends ConsumerWidget {
         ),
         title: Text(
           title,
-          style: GoogleFonts.manrope(
+          style: GoogleFonts.poppins(
             fontWeight: FontWeight.bold,
             fontSize: 16,
             color: theme.colorScheme.onSurface,
@@ -1298,7 +1298,7 @@ class _ProfileTab extends ConsumerWidget {
         ),
         subtitle: Text(
           subtitle,
-          style: GoogleFonts.manrope(
+          style: GoogleFonts.poppins(
             fontSize: 12,
             color: theme.colorScheme.onSurfaceVariant,
           ),

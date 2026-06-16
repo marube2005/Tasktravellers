@@ -248,7 +248,7 @@ class _AdminVerificationReviewScreenState
       appBar: AppBar(
         title: Text(
           'Verification Requests',
-          style: GoogleFonts.manrope(fontWeight: FontWeight.w700),
+          style: GoogleFonts.poppins(fontWeight: FontWeight.w700),
         ),
         centerTitle: true,
         bottom: TabBar(
@@ -315,7 +315,7 @@ class _AdminVerificationReviewScreenState
             const SizedBox(height: 16),
             Text(
               isPending ? 'No pending requests' : 'No processed requests',
-              style: GoogleFonts.manrope(
+              style: GoogleFonts.poppins(
                 fontSize: 16,
                 color: Colors.grey,
               ),
@@ -347,7 +347,7 @@ class _AdminVerificationReviewScreenState
               ),
               title: Text(
                 req['sacco_name'] ?? 'Unknown Sacco',
-                style: GoogleFonts.manrope(fontWeight: FontWeight.w600),
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
               ),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -391,7 +391,7 @@ class _AdminVerificationReviewScreenState
                       const Divider(height: 24),
                       Text(
                         'Documents',
-                        style: GoogleFonts.manrope(
+                        style: GoogleFonts.poppins(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
                         ),
