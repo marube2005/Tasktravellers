@@ -136,6 +136,7 @@ class _HomeTab extends StatefulWidget {
 class _HomeTabState extends State<_HomeTab> {
   bool _isLoading = true;
   String _userName = 'Alex';
+  String? _avatarUrl;
   Map<String, dynamic>? _activeGroup;
   
   @override
@@ -150,10 +151,13 @@ class _HomeTabState extends State<_HomeTab> {
     
     try {
       final user = await UserService().fetchCurrentUserProfileModel();
-      if (user != null && user.name != null && user.name!.isNotEmpty) {
+      if (user != null) {
         if (mounted) {
           setState(() {
-            _userName = user.name!.split(' ').first;
+            if (user.name != null && user.name!.isNotEmpty) {
+              _userName = user.name!.split(' ').first;
+            }
+            _avatarUrl = user.avatarUrl;
           });
         }
       }
@@ -252,7 +256,12 @@ class _HomeTabState extends State<_HomeTab> {
                             CircleAvatar(
                               radius: 18,
                               backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                              child: const Icon(Icons.person, size: 20, color: AppColors.primary),
+                              backgroundImage: _avatarUrl != null && _avatarUrl!.isNotEmpty
+                                  ? NetworkImage(_avatarUrl!)
+                                  : null,
+                              child: _avatarUrl != null && _avatarUrl!.isNotEmpty
+                                  ? null
+                                  : const Icon(Icons.person, size: 20, color: AppColors.primary),
                             ),
                           ],
                         ),
@@ -1043,7 +1052,12 @@ class _ProfileTab extends ConsumerWidget {
                             child: CircleAvatar(
                               radius: 48,
                               backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                              child: const Icon(Icons.person, size: 52, color: AppColors.primary),
+                              backgroundImage: user?.avatarUrl != null && user!.avatarUrl!.isNotEmpty
+                                  ? NetworkImage(user.avatarUrl!)
+                                  : null,
+                              child: user?.avatarUrl != null && user!.avatarUrl!.isNotEmpty
+                                  ? null
+                                  : const Icon(Icons.person, size: 52, color: AppColors.primary),
                             ),
                           ),
                           // Rating Badge Overlay
