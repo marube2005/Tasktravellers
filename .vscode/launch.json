@@ -5,8 +5,7 @@
       "name": "Flutter (Chrome) with .env defines",
       "request": "launch",
       "type": "dart",
-      "program": "frontend/lib/main.dart",
-      "cwd": "frontend",
+      "program": "lib/main.dart",
       "toolArgs": [
         "--dart-define-from-file=.env"
       ],
