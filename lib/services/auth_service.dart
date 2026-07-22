@@ -44,18 +44,49 @@ class AuthService {
   Future<void> signUpUser({
     required String name,
     required String email,
-    required String phone,
+    String? phone,
     required String password,
   }) async {
     try {
+      final cleanEmail = email.trim().toLowerCase();
+      final cleanName = name.trim();
+      final cleanPhone = (phone != null && phone.trim().isNotEmpty) ? phone.trim() : null;
+
+      final dataPayload = <String, dynamic>{
+        'name': cleanName,
+        'full_name': cleanName,
+      };
+      if (cleanPhone != null) {
+        dataPayload['phone'] = cleanPhone;
+      }
+
       final authResponse = await _supabaseClient.auth.signUp(
-        email: email.trim(),
+        email: cleanEmail,
         password: password.trim(),
-        data: {'name': name.trim(), 'phone': phone.trim()},
+        data: dataPayload,
       );
 
       final user = authResponse.user;
       if (user == null) throw Exception('Signup failed.');
+
+      // Automatically sync profile in public.users if session is active.
+      // The database trigger on_auth_user_created handles profile creation via SECURITY DEFINER.
+      try {
+        if (_supabaseClient.auth.currentSession != null) {
+          final userMap = <String, dynamic>{
+            'id': user.id,
+            'email': cleanEmail,
+            'name': cleanName,
+            'role': 'passenger',
+          };
+          if (cleanPhone != null) {
+            userMap['phone'] = cleanPhone;
+          }
+          await _supabaseClient.from('users').upsert(userMap);
+        }
+      } catch (e) {
+        // Ignored: DB trigger automatically populated public.users using user_metadata
+      }
     } on AuthException catch (e) {
       throw Exception('Supabase Auth Error: ${e.message}');
     } catch (e) {
@@ -70,7 +101,7 @@ class AuthService {
   Future<LoginResult> loginUser(String email, String password) async {
     try {
       final response = await _supabaseClient.auth.signInWithPassword(
-        email: email.trim(),
+        email: email.trim().toLowerCase(),
         password: password.trim(),
       );
 

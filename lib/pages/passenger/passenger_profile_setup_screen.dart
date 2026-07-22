@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../services/user_service.dart';
 import '../../themes/app_colors.dart';
 import '../../widgets/avatar_picker.dart';
 
@@ -32,11 +33,59 @@ class _PassengerProfileSetupScreenState
   }
 
   Future<void> _loadExistingProfile() async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user != null) {
-      // Pre-fill name from auth metadata
-      final name = user.userMetadata?['name'] as String? ?? '';
-      _nameController.text = name;
+    setState(() => _isLoading = true);
+    try {
+      // 1. Fetch fresh User object from Supabase server to get latest metadata
+      User? user;
+      try {
+        final response = await Supabase.instance.client.auth.getUser();
+        user = response.user ?? Supabase.instance.client.auth.currentUser;
+      } catch (_) {
+        user = Supabase.instance.client.auth.currentUser;
+      }
+
+      String foundName = '';
+      if (user != null) {
+        foundName = (user.userMetadata?['name'] ?? 
+                     user.userMetadata?['full_name'] ?? 
+                     user.userMetadata?['display_name']) as String? ?? '';
+      }
+
+      // 2. Load full profile details from UserService / DB
+      final profile = await UserService().fetchCurrentUserProfileModel();
+      if (profile != null && profile.name != null && profile.name!.trim().isNotEmpty) {
+        foundName = profile.name!.trim();
+      }
+
+      if (mounted && foundName.isNotEmpty) {
+        _nameController.text = foundName;
+      }
+
+      if (mounted && profile != null) {
+        if (profile.homeArea != null && profile.homeArea!.trim().isNotEmpty) {
+          _homeAreaController.text = profile.homeArea!.trim();
+        }
+        if (profile.preferredRoutes != null && profile.preferredRoutes!.trim().isNotEmpty) {
+          _preferredRoutesController.text = profile.preferredRoutes!.trim();
+        }
+        if (profile.emergencyContactName != null && profile.emergencyContactName!.trim().isNotEmpty) {
+          _emergencyNameController.text = profile.emergencyContactName!.trim();
+        }
+        if (profile.emergencyContactPhone != null && profile.emergencyContactPhone!.trim().isNotEmpty) {
+          _emergencyPhoneController.text = profile.emergencyContactPhone!.trim();
+        }
+        if (profile.avatarUrl != null && profile.avatarUrl!.trim().isNotEmpty) {
+          setState(() {
+            _avatarUrl = profile.avatarUrl;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error pre-filling existing profile: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -46,35 +95,52 @@ class _PassengerProfileSetupScreenState
     setState(() => _isLoading = true);
 
     try {
-      final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) throw Exception('Not authenticated');
+      final currentUser = Supabase.instance.client.auth.currentUser;
+      if (currentUser == null) throw Exception('Not authenticated');
+      final userId = currentUser.id;
 
-      final updates = {
-        'name': _nameController.text.trim(),
+      final email = currentUser.email;
+      final name = _nameController.text.trim();
+      final updates = <String, dynamic>{
+        'id': userId,
+        'name': name,
         'home_area': _homeAreaController.text.trim(),
         'preferred_routes': _preferredRoutesController.text.trim(),
         'emergency_contact_name': _emergencyNameController.text.trim(),
         'emergency_contact_phone': _emergencyPhoneController.text.trim(),
         'role': 'passenger',
       };
+      if (email != null && !email.startsWith('user-')) {
+        updates['email'] = email.trim().toLowerCase();
+      }
       if (_avatarUrl != null) {
         updates['avatar_url'] = _avatarUrl!;
       }
       final client = Supabase.instance.client;
 
+      // Update Auth metadata for consistent display
       try {
-        await client.from('users').update(updates).eq('id', userId);
+        await client.auth.updateUser(
+          UserAttributes(data: {'name': name}),
+        );
+      } catch (e) {
+        debugPrint('Non-critical auth metadata update error: $e');
+      }
+
+      try {
+        await client.from('users').upsert(updates);
       } on PostgrestException catch (e) {
         // If optional columns are missing in an older DB schema, save core profile fields.
         if (e.code == 'PGRST204') {
           final coreUpdates = <String, dynamic>{
-            'name': _nameController.text.trim(),
+            'id': userId,
+            'name': name,
             'role': 'passenger',
           };
           if (_avatarUrl != null) {
             coreUpdates['avatar_url'] = _avatarUrl!;
           }
-          await client.from('users').update(coreUpdates).eq('id', userId);
+          await client.from('users').upsert(coreUpdates);
         } else {
           rethrow;
         }

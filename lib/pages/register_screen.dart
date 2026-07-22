@@ -43,14 +43,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Signup successful! Please verify your phone number.'),
+              content: Text('Signup successful! Welcome to Travelers.'),
             ),
           );
-          Navigator.pushReplacementNamed(
-            context,
-            '/phone-verification',
-            arguments: _phoneController.text.trim(),
-          );
+          // Phone verification commented out per request:
+          // Navigator.pushReplacementNamed(
+          //   context,
+          //   '/phone-verification',
+          //   arguments: _phoneController.text.trim(),
+          // );
+          Navigator.pushReplacementNamed(context, '/role-selection');
         })
         .catchError((Object e) {
           if (!mounted) return;
@@ -161,12 +163,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     prefixIcon: Icons.phone_outlined,
                     keyboardType: TextInputType.phone,
                     validator: (val) {
-                      if (val == null || val.trim().isEmpty) {
-                        return 'Enter your phone number';
-                      }
-                      final clean = val.trim().replaceAll(RegExp(r'\s+'), '');
-                      if (clean.length < 9) {
-                        return 'Enter a valid phone number';
+                      if (val != null && val.trim().isNotEmpty) {
+                        final clean = val.trim().replaceAll(RegExp(r'\s+'), '');
+                        if (clean.length < 9) {
+                          return 'Enter a valid phone number';
+                        }
                       }
                       return null;
                     },

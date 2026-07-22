@@ -146,10 +146,18 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
           type: OtpType.phoneChange,
         );
 
-        // Sync phone in the public.users database table
-        final userId = client.auth.currentUser?.id;
-        if (userId != null) {
-          await client.from('users').update({'phone': formattedPhone}).eq('id', userId);
+        // Sync profile in public.users database table
+        final user = client.auth.currentUser;
+        if (user != null) {
+          final userEmail = user.email;
+          final updates = <String, dynamic>{
+            'id': user.id,
+            'phone': formattedPhone,
+          };
+          if (userEmail != null && !userEmail.startsWith('user-')) {
+            updates['email'] = userEmail;
+          }
+          await client.from('users').upsert(updates);
         }
       } else {
         // If not logged in, verify OTP with sms type (passwordless sign-in)
@@ -158,6 +166,19 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
           token: otp,
           type: OtpType.sms,
         );
+
+        final user = client.auth.currentUser;
+        if (user != null) {
+          final userEmail = user.email;
+          final updates = <String, dynamic>{
+            'id': user.id,
+            'phone': formattedPhone,
+          };
+          if (userEmail != null && !userEmail.startsWith('user-')) {
+            updates['email'] = userEmail;
+          }
+          await client.from('users').upsert(updates);
+        }
       }
 
       if (mounted) {

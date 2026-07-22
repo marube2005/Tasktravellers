@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/location_service.dart';
 import '../../../services/supabase_service.dart';
 import '../../../widgets/bottom_nav_bar.dart';
 import 'group_invite_share_screen.dart';
@@ -18,7 +19,51 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
   DateTime? _scheduledDateTime;
   int _maxPassengers = 3;
   bool _isCreating = false;
-  
+  bool _isFetchingLocation = false;
+
+  double? _originLat;
+  double? _originLng;
+
+  final List<String> _popularDestinations = const [
+    'Nairobi CBD (Archives)',
+    'Westlands Terminal',
+    'Kikuyu Main Stage',
+    'Thika Superhighway Stage',
+    'Juja / JKUAT Gate',
+    'Rongai Stage',
+    'Nakuru Town Stage',
+    'Eldoret Bus Park',
+    'Kisumu Bus Park',
+    'Mombasa Bus Stage',
+  ];
+
+  Future<void> _useCurrentLocation() async {
+    setState(() => _isFetchingLocation = true);
+    try {
+      final result = await LocationService().fetchCurrentLocationDetails();
+      if (result != null && mounted) {
+        setState(() {
+          _originController.text = result.address;
+          _originLat = result.latitude;
+          _originLng = result.longitude;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('🎯 Current location set successfully!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      } else if (mounted) {
+        _showError('Unable to access current location. Please check location permissions.');
+      }
+    } catch (e) {
+      if (mounted) _showError('Location error: $e');
+    } finally {
+      if (mounted) setState(() => _isFetchingLocation = false);
+    }
+  }
+
   Future<void> _selectDateTime() async {
     final now = DateTime.now();
     final pickedDate = await showDatePicker(
@@ -86,6 +131,8 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
         'creator_id': userId,
         'origin': _originController.text.trim(),
         'destination': _destinationController.text.trim(),
+        if (_originLat != null) 'origin_lat': _originLat,
+        if (_originLng != null) 'origin_lng': _originLng,
         'schedule_type': _scheduleType,
         'scheduled_time': _scheduleType == 'Later' && _scheduledDateTime != null 
             ? _scheduledDateTime!.toIso8601String() 
@@ -187,7 +234,7 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
                   Text(
                     'Start a New Journey',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
                     ),
@@ -195,7 +242,7 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
                   Text(
                     'Spirit calls, travel together, save more.',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                       fontSize: 14,
                     ),
                   ),
@@ -210,18 +257,37 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // ROUTE DETAILS section
-                    const Text(
-                      'ROUTE DETAILS',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey,
-                        letterSpacing: 1,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'ROUTE DETAILS',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: _isFetchingLocation ? null : _useCurrentLocation,
+                          icon: _isFetchingLocation
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.my_location_rounded, size: 16, color: Colors.green),
+                          label: Text(
+                            _isFetchingLocation ? 'Locating...' : 'Use Live Location',
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.green),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     
-                    // Origin / Route field
+                    // Origin / Pickup field
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.grey.shade50,
@@ -230,15 +296,21 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
                       ),
                       child: TextField(
                         controller: _originController,
-                        decoration: const InputDecoration(
-                          labelText: 'Route',
-                          hintText: 'Where to search',
+                        decoration: InputDecoration(
+                          labelText: 'Pickup Location / Route',
+                          hintText: 'e.g. Westlands Stage or Live Location',
+                          prefixIcon: const Icon(Icons.trip_origin_rounded, color: Colors.green),
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.gps_fixed_rounded, color: Colors.green),
+                            tooltip: 'Use current GPS location',
+                            onPressed: _isFetchingLocation ? null : _useCurrentLocation,
+                          ),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.all(16),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     
                     // Destination field
                     Container(
@@ -251,11 +323,37 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
                         controller: _destinationController,
                         decoration: const InputDecoration(
                           labelText: 'Destination',
-                          hintText: 'Where to go',
+                          hintText: 'Where are you going?',
+                          prefixIcon: Icon(Icons.location_on_rounded, color: Colors.redAccent),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.all(16),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                         ),
                       ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Popular Destination Chips / Suggestions
+                    const Text(
+                      'Popular Destination Stages:',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: _popularDestinations.map((dest) {
+                        return ActionChip(
+                          avatar: const Icon(Icons.place, size: 14, color: Colors.green),
+                          label: Text(dest, style: const TextStyle(fontSize: 12)),
+                          backgroundColor: Colors.grey.shade100,
+                          side: BorderSide(color: Colors.grey.shade300),
+                          onPressed: () {
+                            setState(() {
+                              _destinationController.text = dest;
+                            });
+                          },
+                        );
+                      }).toList(),
                     ),
                     
                     const SizedBox(height: 24),
@@ -277,7 +375,12 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
                       children: [
                         Expanded(
                           child: GestureDetector(
-                            onTap: () => setState(() => _scheduleType = 'Now'),
+                            onTap: () {
+                              setState(() => _scheduleType = 'Now');
+                              if (_originController.text.trim().isEmpty) {
+                                _useCurrentLocation();
+                              }
+                            },
                             child: Container(
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               decoration: BoxDecoration(

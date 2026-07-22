@@ -135,9 +135,10 @@ class _HomeTab extends StatefulWidget {
 
 class _HomeTabState extends State<_HomeTab> {
   bool _isLoading = true;
-  String _userName = 'Alex';
+  String _userName = 'Traveler';
   String? _avatarUrl;
   Map<String, dynamic>? _activeGroup;
+  List<Map<String, dynamic>> _recentTrips = [];
   
   @override
   void initState() {
@@ -154,8 +155,12 @@ class _HomeTabState extends State<_HomeTab> {
       if (user != null) {
         if (mounted) {
           setState(() {
-            if (user.name != null && user.name!.isNotEmpty) {
-              _userName = user.name!.split(' ').first;
+            if (user.name != null && user.name!.trim().isNotEmpty) {
+              _userName = user.name!.trim().split(' ').first;
+            } else if (user.email != null && user.email!.contains('@')) {
+              _userName = user.email!.split('@').first;
+            } else {
+              _userName = 'Traveler';
             }
             _avatarUrl = user.avatarUrl;
           });
@@ -173,11 +178,19 @@ class _HomeTabState extends State<_HomeTab> {
             .limit(1)
             .maybeSingle();
         
-        if (mounted && response != null) {
+        if (mounted) {
           setState(() {
             _activeGroup = response;
           });
         }
+      }
+
+      // Fetch live booked trips
+      final trips = await BookingService().fetchMyBookedRides();
+      if (mounted) {
+        setState(() {
+          _recentTrips = trips;
+        });
       }
     } catch (e) {
       debugPrint('Error loading dashboard data: $e');
@@ -370,9 +383,9 @@ class _HomeTabState extends State<_HomeTab> {
                           ),
                         ),
                         TextButton(
-                          onPressed: () {},
+                          onPressed: () => Navigator.pushNamed(context, '/create-group-ride'),
                           child: Text(
-                            'See all',
+                            'View all',
                             style: GoogleFonts.poppins(
                               color: AppColors.primary,
                               fontWeight: FontWeight.w700,
@@ -386,26 +399,55 @@ class _HomeTabState extends State<_HomeTab> {
                     const SizedBox(height: 28),
 
                     // Recent Trips
-                    Text(
-                      'Recent Trips',
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: theme.colorScheme.onSurface,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Recent Trips',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            final dashboardState = context.findAncestorStateOfType<_PassengerDashboardScreenState>();
+                            dashboardState?.changeTab(1);
+                          },
+                          child: Text(
+                            'See all',
+                            style: GoogleFonts.poppins(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 12),
-                    _buildRecentTripItem(
-                      title: 'Mombasa Getaway',
-                      subtitle: 'Luxury Coach • KSH 1,500',
-                      timeAgo: '2 days ago',
-                    ),
-                    const SizedBox(height: 12),
-                    _buildRecentTripItem(
-                      title: 'Daily Commute',
-                      subtitle: 'Matatu • KSH 180',
-                      timeAgo: 'Oct 26',
-                    ),
+                    if (_recentTrips.isNotEmpty)
+                      ..._recentTrips.take(3).map((item) {
+                        final ride = item['rides'] as Map<String, dynamic>? ?? {};
+                        final origin = ride['origin'] as String? ?? 'Pickup';
+                        final destination = ride['destination'] as String? ?? 'Destination';
+                        final title = '$origin to $destination';
+                        final fare = ride['fare_per_passenger'] ?? ride['price'] ?? 0;
+                        final subtitle = 'Matatu • KSH $fare';
+                        final createdAt = ride['created_at'] != null ? DateTime.tryParse(ride['created_at'] as String) : null;
+                        final timeAgo = createdAt != null ? '${createdAt.day}/${createdAt.month}' : 'Recent';
+                        
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: _buildRecentTripItem(
+                            title: title,
+                            subtitle: subtitle,
+                            timeAgo: timeAgo,
+                          ),
+                        );
+                      })
+                    else
+                      _buildEmptyRecentTripsCard(theme),
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -414,12 +456,109 @@ class _HomeTabState extends State<_HomeTab> {
     );
   }
 
+  Widget _buildEmptyRecentTripsCard(ThemeData theme) {
+    final isDarkMode = theme.brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDarkMode ? AppColors.cardDark : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDarkMode ? AppColors.borderDark.withValues(alpha: 0.5) : AppColors.borderLight,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.directions_bus_outlined, color: AppColors.primary, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'No recent trips yet',
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Book your first ride to see your trip history here.',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildActiveGroupCard() {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
     
-    final origin = _activeGroup?['origin'] as String? ?? 'Nairobi CBD';
-    final destination = _activeGroup?['destination'] as String? ?? 'Nakuru';
+    if (_activeGroup == null) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: isDarkMode ? AppColors.cardDark : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isDarkMode ? AppColors.borderDark.withValues(alpha: 0.5) : AppColors.borderLight,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(Icons.group_outlined, size: 40, color: Colors.grey.shade400),
+            const SizedBox(height: 12),
+            Text(
+              'No Active Group Ride',
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Start a group ride to coordinate with friends and split the fare.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 14),
+            ElevatedButton.icon(
+              onPressed: () => Navigator.pushNamed(context, '/create-group-ride'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              icon: const Icon(Icons.add_rounded, size: 18),
+              label: const Text('Create Group Ride'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final origin = _activeGroup?['origin'] as String? ?? 'Origin';
+    final destination = _activeGroup?['destination'] as String? ?? 'Destination';
     final currentPassengers = _activeGroup?['current_passengers'] as int? ?? 1;
     final maxPassengers = _activeGroup?['max_passengers'] as int? ?? 3;
     final status = _activeGroup?['status'] as String? ?? 'forming';
@@ -990,12 +1129,18 @@ class _ProfileTab extends ConsumerWidget {
           future: UserService().fetchCurrentUserProfileModel(),
           builder: (context, snapshot) {
             final user = snapshot.data;
-            final name = user?.name ?? 'Alex Maina';
+            final authUser = Supabase.instance.client.auth.currentUser;
+            final name = (user?.name != null && user!.name!.trim().isNotEmpty)
+                ? user.name!.trim()
+                : (authUser?.userMetadata?['name'] as String? ??
+                    (user?.email != null && user!.email!.contains('@')
+                        ? user.email!.split('@').first
+                        : 'Traveler'));
             
             final memberYear = user?.createdAt != null 
                 ? user!.createdAt!.year.toString() 
-                : '2022';
-            final subtext = 'Premium Traveler • Member since $memberYear';
+                : DateTime.now().year.toString();
+            final subtext = 'Traveler • Member since $memberYear';
 
             return ListView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),

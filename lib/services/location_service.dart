@@ -3,6 +3,19 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// Structured result containing user GPS position and reverse-geocoded address.
+class UserLocationResult {
+  final double latitude;
+  final double longitude;
+  final String address;
+
+  UserLocationResult({
+    required this.latitude,
+    required this.longitude,
+    required this.address,
+  });
+}
+
 /// A service class to handle location tracking, permissions, and real-time updates.
 /// Used for vehicle tracking, passenger pickup, and ride progress.
 class LocationService {
@@ -101,6 +114,19 @@ class LocationService {
     } catch (e) {
       return null;
     }
+  }
+
+  /// Helper to get current location with formatted address details.
+  Future<UserLocationResult?> fetchCurrentLocationDetails() async {
+    final pos = await getCurrentPosition();
+    if (pos == null) return null;
+
+    final address = await getAddressFromCoordinates(pos.latitude, pos.longitude);
+    return UserLocationResult(
+      latitude: pos.latitude,
+      longitude: pos.longitude,
+      address: address ?? '${pos.latitude.toStringAsFixed(4)}, ${pos.longitude.toStringAsFixed(4)}',
+    );
   }
 
   /// Convert coordinates to a human-readable address.
