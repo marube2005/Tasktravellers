@@ -153,19 +153,21 @@ class _PassengerProfileSetupScreenState
         Navigator.pushReplacementNamed(context, '/permissions');
       }
     } on PostgrestException catch (e) {
+      debugPrint('PostgrestException saving profile: code=${e.code} msg=${e.message} details=${e.details}');
       if (mounted) {
         final message = e.code == 'PGRST204'
             ? 'Your profile was partially saved. Please apply the latest database migrations.'
-            : 'Unable to save profile right now. Please try again.';
+            : 'Unable to save profile right now. (${e.code}: ${e.message})';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
         setState(() => _isLoading = false);
       }
     } catch (e) {
+      debugPrint('Exception saving profile: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Unable to save profile right now.')),
+          SnackBar(content: Text('Unable to save profile right now. Error: $e')),
         );
         setState(() => _isLoading = false);
       }

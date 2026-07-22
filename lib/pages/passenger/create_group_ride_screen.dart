@@ -24,6 +24,51 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
   double? _originLat;
   double? _originLng;
 
+  List<UserLocationResult> _originSuggestions = [];
+  List<UserLocationResult> _destinationSuggestions = [];
+  bool _isSearchingOrigin = false;
+  bool _isSearchingDestination = false;
+
+  void _onOriginChanged(String text) {
+    if (text.trim().length < 2) {
+      if (_originSuggestions.isNotEmpty) {
+        setState(() => _originSuggestions = []);
+      }
+      return;
+    }
+    setState(() => _isSearchingOrigin = true);
+    LocationService().searchAddressSuggestions(text).then((results) {
+      if (mounted) {
+        setState(() {
+          _originSuggestions = results;
+          _isSearchingOrigin = false;
+        });
+      }
+    }).catchError((_) {
+      if (mounted) setState(() => _isSearchingOrigin = false);
+    });
+  }
+
+  void _onDestinationChanged(String text) {
+    if (text.trim().length < 2) {
+      if (_destinationSuggestions.isNotEmpty) {
+        setState(() => _destinationSuggestions = []);
+      }
+      return;
+    }
+    setState(() => _isSearchingDestination = true);
+    LocationService().searchAddressSuggestions(text).then((results) {
+      if (mounted) {
+        setState(() {
+          _destinationSuggestions = results;
+          _isSearchingDestination = false;
+        });
+      }
+    }).catchError((_) {
+      if (mounted) setState(() => _isSearchingDestination = false);
+    });
+  }
+
   final List<String> _popularDestinations = const [
     'Nairobi CBD (Archives)',
     'Westlands Terminal',
@@ -296,20 +341,47 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
                       ),
                       child: TextField(
                         controller: _originController,
+                        onChanged: _onOriginChanged,
                         decoration: InputDecoration(
                           labelText: 'Pickup Location / Route',
                           hintText: 'e.g. Westlands Stage or Live Location',
                           prefixIcon: const Icon(Icons.trip_origin_rounded, color: Colors.green),
-                          suffixIcon: IconButton(
-                            icon: const Icon(Icons.gps_fixed_rounded, color: Colors.green),
-                            tooltip: 'Use current GPS location',
-                            onPressed: _isFetchingLocation ? null : _useCurrentLocation,
+                          suffixIcon: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (_isSearchingOrigin)
+                                const Padding(
+                                  padding: EdgeInsets.all(12.0),
+                                  child: SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.green),
+                                  ),
+                                ),
+                              IconButton(
+                                icon: const Icon(Icons.gps_fixed_rounded, color: Colors.green),
+                                tooltip: 'Use current GPS location',
+                                onPressed: _isFetchingLocation ? null : _useCurrentLocation,
+                              ),
+                            ],
                           ),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                         ),
                       ),
                     ),
+                    if (_originSuggestions.isNotEmpty)
+                      _buildSuggestionsList(
+                        suggestions: _originSuggestions,
+                        onSelect: (loc) {
+                          setState(() {
+                            _originController.text = loc.address;
+                            _originLat = loc.latitude;
+                            _originLng = loc.longitude;
+                            _originSuggestions = [];
+                          });
+                        },
+                      ),
                     const SizedBox(height: 16),
                     
                     // Destination field
@@ -321,15 +393,36 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
                       ),
                       child: TextField(
                         controller: _destinationController,
-                        decoration: const InputDecoration(
+                        onChanged: _onDestinationChanged,
+                        decoration: InputDecoration(
                           labelText: 'Destination',
                           hintText: 'Where are you going?',
-                          prefixIcon: Icon(Icons.location_on_rounded, color: Colors.redAccent),
+                          prefixIcon: const Icon(Icons.location_on_rounded, color: Colors.redAccent),
+                          suffixIcon: _isSearchingDestination
+                              ? const Padding(
+                                  padding: EdgeInsets.all(12.0),
+                                  child: SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.redAccent),
+                                  ),
+                                )
+                              : null,
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                         ),
                       ),
                     ),
+                    if (_destinationSuggestions.isNotEmpty)
+                      _buildSuggestionsList(
+                        suggestions: _destinationSuggestions,
+                        onSelect: (loc) {
+                          setState(() {
+                            _destinationController.text = loc.address;
+                            _destinationSuggestions = [];
+                          });
+                        },
+                      ),
                     const SizedBox(height: 10),
 
                     // Popular Destination Chips / Suggestions
@@ -582,6 +675,42 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
             const BottomNavBar(currentIndex: 0),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSuggestionsList({
+    required List<UserLocationResult> suggestions,
+    required Function(UserLocationResult) onSelect,
+  }) {
+    if (suggestions.isEmpty) return const SizedBox.shrink();
+    return Container(
+      margin: const EdgeInsets.only(top: 4, bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.green.shade200),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: suggestions.map((loc) {
+          return ListTile(
+            dense: true,
+            leading: const Icon(Icons.location_on_outlined, color: Colors.green, size: 18),
+            title: Text(
+              loc.address,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+            onTap: () => onSelect(loc),
+          );
+        }).toList(),
       ),
     );
   }

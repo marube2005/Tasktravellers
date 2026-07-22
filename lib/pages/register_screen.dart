@@ -39,20 +39,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
           phone: _phoneController.text,
           password: _passwordController.text,
         )
-        .then((_) {
+        .then((result) {
           if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Signup successful! Welcome to Travelers.'),
-            ),
-          );
-          // Phone verification commented out per request:
-          // Navigator.pushReplacementNamed(
-          //   context,
-          //   '/phone-verification',
-          //   arguments: _phoneController.text.trim(),
-          // );
-          Navigator.pushReplacementNamed(context, '/role-selection');
+          if (result == SignUpResult.needsEmailVerification) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Account created! Please check your email inbox to verify your account before logging in.'),
+                duration: Duration(seconds: 4),
+              ),
+            );
+            Navigator.pushReplacementNamed(context, '/login');
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Signup successful! Welcome to Travelers.'),
+              ),
+            );
+            Navigator.pushReplacementNamed(context, '/role-selection');
+          }
         })
         .catchError((Object e) {
           if (!mounted) return;

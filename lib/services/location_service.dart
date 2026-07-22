@@ -163,6 +163,43 @@ class LocationService {
     }
   }
 
+  /// Search for street/road/location suggestions as the user types.
+  Future<List<UserLocationResult>> searchAddressSuggestions(String query) async {
+    final cleanQuery = query.trim();
+    if (cleanQuery.length < 2) return [];
+
+    try {
+      final locations = await locationFromAddress(cleanQuery);
+      final results = <UserLocationResult>[];
+      final seenAddresses = <String>{};
+
+      for (final loc in locations.take(6)) {
+        final address = await getAddressFromCoordinates(loc.latitude, loc.longitude);
+        if (address != null && address.isNotEmpty && !seenAddresses.contains(address)) {
+          seenAddresses.add(address);
+          results.add(UserLocationResult(
+            latitude: loc.latitude,
+            longitude: loc.longitude,
+            address: address,
+          ));
+        }
+      }
+
+      if (results.isEmpty && locations.isNotEmpty) {
+        final firstLoc = locations.first;
+        results.add(UserLocationResult(
+          latitude: firstLoc.latitude,
+          longitude: firstLoc.longitude,
+          address: cleanQuery,
+        ));
+      }
+
+      return results;
+    } catch (e) {
+      return [];
+    }
+  }
+
   // =========================================================================
   // 3. REAL-TIME TRACKING
   // =========================================================================

@@ -7,14 +7,11 @@
     <list default="true" id="82b5e0b6-6c09-49e4-b78b-f13c66131e76" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/pages/passenger/create_group_ride_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/pages/passenger/create_group_ride_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/pages/passenger/passenger_dashboard_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/pages/passenger/passenger_dashboard_screen.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/pages/passenger/passenger_profile_setup_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/pages/passenger/passenger_profile_setup_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/pages/phone_login_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/pages/phone_login_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/pages/psv/sacco_profile_setup_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/pages/psv/sacco_profile_setup_screen.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/pages/register_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/pages/register_screen.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/services/auth_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/auth_service.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/services/location_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/location_service.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/services/user_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/user_service.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supabase/migrations/20260721_0001_auto_create_public_users_trigger.sql" beforeDir="false" afterPath="$PROJECT_DIR$/supabase/migrations/20260721_0001_auto_create_public_users_trigger.sql" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

@@ -13,6 +13,14 @@ enum LoginResult {
   emailNotVerified,
 }
 
+enum SignUpResult {
+  /// User session created and active.
+  sessionCreated,
+
+  /// Account created but email verification link was sent.
+  needsEmailVerification,
+}
+
 /// A service class to handle all Supabase Authentication logic.
 class AuthService {
   final SupabaseClient _supabaseClient = Supabase.instance.client;
@@ -33,15 +41,8 @@ class AuthService {
   /// 2. PUBLIC METHODS
   /// =========================================================================
 
-  /// Registers a new user with an email and password.
-  ///
-  /// Throws an [Exception] on failure. On success the caller should show a
-  /// confirmation message and navigate to '/email_verification'.
-  ///
-  /// NOTE: The MVP specifies Phone/OTP. Supabase supports this via
-  /// 'signInWithOtp(phone: ...)'. Email/Password is used here for simplicity;
-  /// the phone flow requires additional backend OTP handling.
-  Future<void> signUpUser({
+  /// Signs up a user using email and password.
+  Future<SignUpResult> signUpUser({
     required String name,
     required String email,
     String? phone,
@@ -69,10 +70,8 @@ class AuthService {
       final user = authResponse.user;
       if (user == null) throw Exception('Signup failed.');
 
-      // Automatically sync profile in public.users if session is active.
-      // The database trigger on_auth_user_created handles profile creation via SECURITY DEFINER.
-      try {
-        if (_supabaseClient.auth.currentSession != null) {
+      if (authResponse.session != null) {
+        try {
           final userMap = <String, dynamic>{
             'id': user.id,
             'email': cleanEmail,
@@ -83,9 +82,10 @@ class AuthService {
             userMap['phone'] = cleanPhone;
           }
           await _supabaseClient.from('users').upsert(userMap);
-        }
-      } catch (e) {
-        // Ignored: DB trigger automatically populated public.users using user_metadata
+        } catch (_) {}
+        return SignUpResult.sessionCreated;
+      } else {
+        return SignUpResult.needsEmailVerification;
       }
     } on AuthException catch (e) {
       throw Exception('Supabase Auth Error: ${e.message}');
@@ -116,6 +116,11 @@ class AuthService {
 
       return LoginResult.success;
     } on AuthException catch (e) {
+      if (e.message.toLowerCase().contains('invalid login credentials')) {
+        throw Exception(
+          'Invalid credentials. If you recently signed up, please verify your email inbox or check your password.',
+        );
+      }
       throw Exception(e.message);
     } catch (e) {
       throw Exception('Login error: $e');
