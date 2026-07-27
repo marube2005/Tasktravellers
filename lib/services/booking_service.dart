@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../repositories/group_repository.dart';
 
 /// A service class to handle ride booking and group management logic.
 class BookingService {
@@ -29,46 +31,122 @@ class BookingService {
     }
 
     try {
-      // 1. Check if the ride is still 'open' and has capacity.
-      final Map<String, dynamic> ride = await _supabaseClient
+      // 1. Check if the ride exists in 'group_rides' first
+      final Map<String, dynamic>? groupRide = await _supabaseClient
+          .from('group_rides')
+          .select('creator_id, status, max_passengers, current_passengers')
+          .eq('id', rideId)
+          .maybeSingle();
+
+      if (groupRide != null) {
+        final String? creatorId = groupRide['creator_id'] as String?;
+        if (creatorId == userId) {
+          throw Exception('You are already the creator of this group ride.');
+        }
+
+        final String status = groupRide['status'] as String? ?? 'forming';
+        if (status == 'completed' || status == 'cancelled') {
+          throw Exception('Group ride is no longer active.');
+        }
+
+        final int maxPassengers = (groupRide['max_passengers'] as int?) ?? 4;
+        final int currentCount = (groupRide['current_passengers'] as int?) ?? 1;
+
+        if (currentCount >= maxPassengers) {
+          throw Exception('Group ride is full (max $maxPassengers passengers reached).');
+        }
+
+        // Check if user has already joined group_members
+        final Map<String, dynamic>? existingMember = await _supabaseClient
+            .from('group_members')
+            .select('id')
+            .eq('group_id', rideId)
+            .eq('user_id', userId)
+            .maybeSingle();
+
+        if (existingMember != null) {
+          throw Exception('You have already joined this group ride.');
+        }
+
+        // Insert into group_members
+        try {
+          await _supabaseClient.from('group_members').insert({
+            'group_id': rideId,
+            'user_id': userId,
+            'joined_via': 'invite_link',
+            'confirmed': true,
+            'joined_at': DateTime.now().toIso8601String(),
+          });
+        } on PostgrestException catch (e) {
+          if (e.code == '23505') {
+            throw Exception('You have already joined this group ride.');
+          }
+          // Do NOT fall back to 'bookings' table because bookings.ride_id has a foreign key to 'rides' table (not group_rides)
+          throw Exception('Could not join group ride: ${e.message}');
+        }
+
+        // Update current passenger count on group_rides
+        final int newCount = currentCount + 1;
+        final int minPassengers = (groupRide['min_passengers'] as int?) ?? 3;
+        final bool isReady = newCount >= minPassengers && status == 'forming';
+
+        await _supabaseClient
+            .from('group_rides')
+            .update({
+              'current_passengers': newCount,
+              if (isReady) 'status': 'ready',
+            })
+            .eq('id', rideId);
+
+        if (isReady) {
+          try {
+            await GroupRepository().notifyDrivers(rideId);
+          } catch (e) {
+            debugPrint('Note: Driver notification triggered on auto-dispatch: $e');
+          }
+        }
+
+        return;
+      }
+
+      // 2. Fallback check for standard 'rides' table
+      final Map<String, dynamic>? ride = await _supabaseClient
           .from('rides')
           .select('status, group_size')
           .eq('id', rideId)
-          .single();
+          .maybeSingle();
+
+      if (ride == null) {
+        throw Exception('Ride not found.');
+      }
 
       if (ride['status'] != 'open') {
         throw Exception('Ride is not open for new bookings.');
       }
 
-      // Client-side capacity guard. The server-side trigger is the authoritative
-      // check, but an early client check gives a clearer error message.
       final int groupSize = (ride['group_size'] as int?) ?? 0;
       final int currentCount = await getRidePassengerCount(rideId: rideId);
-      if (currentCount >= groupSize) {
+      if (groupSize > 0 && currentCount >= groupSize) {
         throw Exception('Ride is full. Maximum capacity of $groupSize passengers reached.');
       }
 
-      // 2. Insert the booking record
+      // Insert booking record
       await _supabaseClient.from('bookings').insert({
         'ride_id': rideId,
         'passenger_id': userId,
       });
 
     } on PostgrestException catch (e) {
-      // Handle the unique constraint violation specifically
-      // Supabase returns 23505 for unique violation
       if (e.code == '23505') {
         throw Exception('You have already joined this ride.');
       }
       throw Exception('Database Error during booking: ${e.message}');
     } catch (e) {
-      throw Exception('An unexpected error occurred while joining the ride: $e');
+      throw Exception(e.toString().replaceFirst('Exception: ', ''));
     }
   }
 
   /// Allows a passenger to leave a ride before it is accepted/in_progress.
-  ///
-  /// This deletes the record from the 'bookings' junction table.
   Future<void> leaveRide({required String rideId}) async {
     final userId = _currentUserId;
     if (userId == null) {
@@ -76,7 +154,12 @@ class BookingService {
     }
 
     try {
-      // Delete the booking record for the specific ride and user
+      await _supabaseClient
+          .from('group_members')
+          .delete()
+          .eq('group_id', rideId)
+          .eq('user_id', userId);
+
       await _supabaseClient
           .from('bookings')
           .delete()
@@ -102,15 +185,12 @@ class BookingService {
     }
 
     try {
-      // Fetch bookings, and INNER JOIN/select the ride details
-    final List<dynamic> bookings = await _supabaseClient
+      final List<dynamic> bookings = await _supabaseClient
           .from('bookings')
-          .select('*, rides(*)') // Select all booking fields and join the related ride details
+          .select('*, rides(*)')
           .eq('passenger_id', userId);
 
-      // The structure will be: [{..., "rides": {ride details}}, ...]
-      // You may need to further map this to a specific model in your presentation layer.
-    return bookings.cast<Map<String, dynamic>>();
+      return bookings.cast<Map<String, dynamic>>();
 
     } on PostgrestException catch (e) {
       throw Exception('Database Error fetching booked rides: ${e.message}');
@@ -122,18 +202,24 @@ class BookingService {
   /// Counts the number of passengers currently booked on a specific ride.
   Future<int> getRidePassengerCount({required String rideId}) async {
     try {
-    // Simple count by selecting IDs and returning the list length
-    final List<dynamic> rows = await _supabaseClient
-      .from('bookings')
-      .select('id')
-      .eq('ride_id', rideId);
+      final List<dynamic> groupMembers = await _supabaseClient
+          .from('group_members')
+          .select('id')
+          .eq('group_id', rideId);
 
-    return rows.length;
+      if (groupMembers.isNotEmpty) {
+        return groupMembers.length;
+      }
+
+      final List<dynamic> rows = await _supabaseClient
+          .from('bookings')
+          .select('id')
+          .eq('ride_id', rideId);
+
+      return rows.length;
       
-    } on PostgrestException catch (e) {
-      throw Exception('Database Error counting passengers: ${e.message}');
-    } catch (e) {
-      throw Exception('An unexpected error occurred while counting passengers: $e');
+    } catch (_) {
+      return 1;
     }
   }
 
@@ -142,14 +228,20 @@ class BookingService {
   /// =========================================================================
 
   /// Listens to real-time changes in the number of passengers for a specific ride.
-  /// This is essential for the "Create Group Ride Pool" feature.
   Stream<List<Map<String, dynamic>>> rideBookingsStream({required String rideId}) {
-    // You subscribe to the 'bookings' table filtered by the specific ride_id.
-    // This stream will emit whenever a passenger joins or leaves.
     return _supabaseClient
         .from('bookings')
         .stream(primaryKey: ['id'])
         .eq('ride_id', rideId)
         .order('joined_at', ascending: true);
+  }
+
+  /// Listens to real-time changes in group_rides record (status, current_passengers).
+  Stream<Map<String, dynamic>?> groupRideStream({required String rideId}) {
+    return _supabaseClient
+        .from('group_rides')
+        .stream(primaryKey: ['id'])
+        .eq('id', rideId)
+        .map((list) => list.isNotEmpty ? list.first : null);
   }
 }
