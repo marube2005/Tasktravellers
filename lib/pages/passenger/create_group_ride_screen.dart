@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/location_service.dart';
 import '../../../services/supabase_service.dart';
 import '../../../widgets/bottom_nav_bar.dart';
+import '../../themes/app_colors.dart';
+import '../../widgets/route_preview_map.dart';
 import 'group_invite_share_screen.dart';
 
 class CreateGroupRideScreen extends StatefulWidget {
@@ -23,6 +27,8 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
 
   double? _originLat;
   double? _originLng;
+  double? _destLat;
+  double? _destLng;
 
   List<UserLocationResult> _originSuggestions = [];
   List<UserLocationResult> _destinationSuggestions = [];
@@ -72,15 +78,25 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
   final List<String> _popularDestinations = const [
     'Nairobi CBD (Archives)',
     'Westlands Terminal',
+    'JKUAT Gate',
     'Kikuyu Main Stage',
-    'Thika Superhighway Stage',
-    'Juja / JKUAT Gate',
-    'Rongai Stage',
-    'Nakuru Town Stage',
-    'Eldoret Bus Park',
-    'Kisumu Bus Park',
-    'Mombasa Bus Stage',
   ];
+
+  void _swapLocations() {
+    final tempText = _originController.text;
+    final tempLat = _originLat;
+    final tempLng = _originLng;
+
+    setState(() {
+      _originController.text = _destinationController.text;
+      _originLat = _destLat;
+      _originLng = _destLng;
+
+      _destinationController.text = tempText;
+      _destLat = tempLat;
+      _destLng = tempLng;
+    });
+  }
 
   Future<void> _useCurrentLocation() async {
     setState(() => _isFetchingLocation = true);
@@ -95,7 +111,7 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('🎯 Current location set successfully!'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.primary,
             duration: Duration(seconds: 2),
           ),
         );
@@ -138,7 +154,35 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
     }
   }
   
-  Future<void> _createGroup() async {
+  void _seedTestGroupRide() {
+    setState(() {
+      _originController.text = 'Nairobi CBD (Archives)';
+      _destinationController.text = 'Westlands Terminal';
+      _originLat = -1.286389;
+      _originLng = 36.817223;
+      _destLat = -1.268333;
+      _destLng = 36.809444;
+      _maxPassengers = 4;
+      _scheduleType = 'Now';
+    });
+    _createGroup();
+  }
+
+  void _seedReadyGroupRide() {
+    setState(() {
+      _originController.text = 'Nairobi CBD (Archives)';
+      _destinationController.text = 'Westlands Terminal';
+      _originLat = -1.286389;
+      _originLng = 36.817223;
+      _destLat = -1.268333;
+      _destLng = 36.809444;
+      _maxPassengers = 4;
+      _scheduleType = 'Now';
+    });
+    _createGroup(overrideStatus: 'ready', overridePassengers: 3);
+  }
+
+  Future<void> _createGroup({String? overrideStatus, int? overridePassengers}) async {
     // Validate inputs
     if (_originController.text.trim().isEmpty) {
       _showError('Please enter origin/pickup location');
@@ -152,11 +196,8 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
     setState(() => _isCreating = true);
     
     try {
-      // Get Supabase client directly
       final supabaseService = SupabaseService();
       final supabaseClient = supabaseService.client;
-      
-      // Get current session directly (NO provider)
       final session = supabaseClient.auth.currentSession;
       
       if (session == null) {
@@ -165,42 +206,52 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
       }
       
       final userId = session.user.id;
-      debugPrint('✅ User ID: $userId');
-      
-      // Generate unique invite code
       final inviteCode = supabaseService.generateInviteCode();
-      debugPrint('✅ Invite Code: $inviteCode');
       
-      // Prepare group ride data
       final groupRideData = {
         'creator_id': userId,
         'origin': _originController.text.trim(),
         'destination': _destinationController.text.trim(),
         if (_originLat != null) 'origin_lat': _originLat,
         if (_originLng != null) 'origin_lng': _originLng,
+        if (_destLat != null) 'dest_lat': _destLat,
+        if (_destLng != null) 'dest_lng': _destLng,
         'schedule_type': _scheduleType,
         'scheduled_time': _scheduleType == 'Later' && _scheduledDateTime != null 
             ? _scheduledDateTime!.toIso8601String() 
             : null,
         'max_passengers': _maxPassengers,
         'min_passengers': 3,
-        'current_passengers': 1,
-        'status': 'forming',
+        'current_passengers': overridePassengers ?? 1,
+        'status': overrideStatus ?? 'forming',
         'invite_code': inviteCode,
         'created_at': DateTime.now().toIso8601String(),
         'is_locked': false,
       };
       
-      debugPrint('📦 Inserting group ride: $groupRideData');
-      
-      // Insert into Supabase
-      final response = await supabaseClient
-          .from('group_rides')
-          .insert(groupRideData)
-          .select()
-          .single();
-      
-      debugPrint('✅ Group created with ID: ${response['id']}');
+      Map<String, dynamic> response;
+      try {
+        response = await supabaseClient
+            .from('group_rides')
+            .insert(groupRideData)
+            .select()
+            .single();
+      } on PostgrestException catch (e) {
+        if (e.code == 'PGRST204' || e.message.contains('dest_lat')) {
+          // Retry without dest_lat/dest_lng if columns have not been added to Supabase DB yet
+          final fallbackData = Map<String, dynamic>.from(groupRideData)
+            ..remove('dest_lat')
+            ..remove('dest_lng');
+
+          response = await supabaseClient
+              .from('group_rides')
+              .insert(fallbackData)
+              .select()
+              .single();
+        } else {
+          rethrow;
+        }
+      }
       
       if (mounted) {
         Navigator.pushReplacement(
@@ -240,292 +291,388 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF9FAF9),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
+          onPressed: () => Navigator.maybePop(context),
+        ),
+        title: Text(
+          'Travelers',
+          style: GoogleFonts.poppins(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w800,
+            fontSize: 22,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_none_outlined, color: AppColors.primary),
+            onPressed: () {},
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Colors.green.shade700, Colors.green.shade400],
-                ),
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Travelers',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Start a New Journey',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  Text(
-                    'Spirit calls, travel together, save more.',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ROUTE DETAILS section
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'ROUTE DETAILS',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                        TextButton.icon(
-                          onPressed: _isFetchingLocation ? null : _useCurrentLocation,
-                          icon: _isFetchingLocation
-                              ? const SizedBox(
-                                  width: 14,
-                                  height: 14,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Icon(Icons.my_location_rounded, size: 16, color: Colors.green),
-                          label: Text(
-                            _isFetchingLocation ? 'Locating...' : 'Use Live Location',
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.green),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    
-                    // Origin / Pickup field
+                    // 1. HERO BANNER CARD (From Design Image 1)
                     Container(
+                      width: double.infinity,
+                      height: 140,
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade200),
+                        borderRadius: BorderRadius.circular(20),
+                        image: const DecorationImage(
+                          image: AssetImage('assets/matatu.png'),
+                          fit: BoxFit.cover,
+                        ),
                       ),
-                      child: TextField(
-                        controller: _originController,
-                        onChanged: _onOriginChanged,
-                        decoration: InputDecoration(
-                          labelText: 'Pickup Location / Route',
-                          hintText: 'e.g. Westlands Stage or Live Location',
-                          prefixIcon: const Icon(Icons.trip_origin_rounded, color: Colors.green),
-                          suffixIcon: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (_isSearchingOrigin)
-                                const Padding(
-                                  padding: EdgeInsets.all(12.0),
-                                  child: SizedBox(
-                                    width: 14,
-                                    height: 14,
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.green),
-                                  ),
-                                ),
-                              IconButton(
-                                icon: const Icon(Icons.gps_fixed_rounded, color: Colors.green),
-                                tooltip: 'Use current GPS location',
-                                onPressed: _isFetchingLocation ? null : _useCurrentLocation,
-                              ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withValues(alpha: 0.15),
+                              Colors.black.withValues(alpha: 0.8),
                             ],
                           ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        ),
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Start a New Journey',
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Split costs, travel together, save more.',
+                              style: GoogleFonts.poppins(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    if (_originSuggestions.isNotEmpty)
-                      _buildSuggestionsList(
-                        suggestions: _originSuggestions,
-                        onSelect: (loc) {
-                          setState(() {
-                            _originController.text = loc.address;
-                            _originLat = loc.latitude;
-                            _originLng = loc.longitude;
-                            _originSuggestions = [];
-                          });
-                        },
-                      ),
-                    const SizedBox(height: 16),
-                    
-                    // Destination field
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade200),
-                      ),
-                      child: TextField(
-                        controller: _destinationController,
-                        onChanged: _onDestinationChanged,
-                        decoration: InputDecoration(
-                          labelText: 'Destination',
-                          hintText: 'Where are you going?',
-                          prefixIcon: const Icon(Icons.location_on_rounded, color: Colors.redAccent),
-                          suffixIcon: _isSearchingDestination
-                              ? const Padding(
-                                  padding: EdgeInsets.all(12.0),
-                                  child: SizedBox(
-                                    width: 14,
-                                    height: 14,
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.redAccent),
-                                  ),
-                                )
-                              : null,
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        ),
-                      ),
-                    ),
-                    if (_destinationSuggestions.isNotEmpty)
-                      _buildSuggestionsList(
-                        suggestions: _destinationSuggestions,
-                        onSelect: (loc) {
-                          setState(() {
-                            _destinationController.text = loc.address;
-                            _destinationSuggestions = [];
-                          });
-                        },
-                      ),
-                    const SizedBox(height: 10),
 
-                    // Popular Destination Chips / Suggestions
-                    const Text(
-                      'Popular Destination Stages:',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.grey),
+                    const SizedBox(height: 20),
+
+                    // 2. ROUTE DETAILS SECTION (From Design Image 1)
+                    Text(
+                      'ROUTE DETAILS',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF64748B),
+                        letterSpacing: 1,
+                      ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.02),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Origin',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF64748B),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.gps_fixed_rounded, color: AppColors.primary, size: 20),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _originController,
+                                    onChanged: _onOriginChanged,
+                                    decoration: InputDecoration(
+                                      hintText: 'Where from?',
+                                      hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 14),
+                                      border: InputBorder.none,
+                                    ),
+                                  ),
+                                ),
+                                if (_isSearchingOrigin)
+                                  const Padding(
+                                    padding: EdgeInsets.only(right: 8),
+                                    child: SizedBox(
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                                    ),
+                                  ),
+                                IconButton(
+                                  icon: _isFetchingLocation
+                                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                      : Icon(Icons.my_location_rounded, color: AppColors.primary, size: 20),
+                                  onPressed: _isFetchingLocation ? null : _useCurrentLocation,
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (_originSuggestions.isNotEmpty)
+                            _buildSuggestionsList(
+                              suggestions: _originSuggestions,
+                              onSelect: (loc) {
+                                setState(() {
+                                  _originController.text = loc.address;
+                                  _originLat = loc.latitude;
+                                  _originLng = loc.longitude;
+                                  _originSuggestions = [];
+                                });
+                              },
+                            ),
+
+                          // Swap Button in Center
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: GestureDetector(
+                                onTap: _swapLocations,
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.swap_vert, color: Colors.white, size: 20),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          Text(
+                            'Destination',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF64748B),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.outlined_flag_rounded, color: AppColors.primary, size: 20),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _destinationController,
+                                    onChanged: _onDestinationChanged,
+                                    decoration: InputDecoration(
+                                      hintText: 'Where to?',
+                                      hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 14),
+                                      border: InputBorder.none,
+                                    ),
+                                  ),
+                                ),
+                                if (_isSearchingDestination)
+                                  const Padding(
+                                    padding: EdgeInsets.all(12),
+                                    child: SizedBox(
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          if (_destinationSuggestions.isNotEmpty)
+                            _buildSuggestionsList(
+                              suggestions: _destinationSuggestions,
+                              onSelect: (loc) {
+                                setState(() {
+                                  _destinationController.text = loc.address;
+                                  _destLat = loc.latitude;
+                                  _destLng = loc.longitude;
+                                  _destinationSuggestions = [];
+                                });
+                              },
+                            ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Popular Destination Chips (Restricted to 4 key stages)
                     Wrap(
                       spacing: 8,
                       runSpacing: 6,
                       children: _popularDestinations.map((dest) {
                         return ActionChip(
-                          avatar: const Icon(Icons.place, size: 14, color: Colors.green),
-                          label: Text(dest, style: const TextStyle(fontSize: 12)),
-                          backgroundColor: Colors.grey.shade100,
-                          side: BorderSide(color: Colors.grey.shade300),
-                          onPressed: () {
+                          avatar: Icon(Icons.place, size: 14, color: AppColors.primary),
+                          label: Text(
+                            dest,
+                            style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF334155)),
+                          ),
+                          backgroundColor: Colors.white,
+                          side: const BorderSide(color: Color(0xFFCBD5E1)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          onPressed: () async {
                             setState(() {
                               _destinationController.text = dest;
                             });
+                            final loc = await LocationService().getCoordinatesFromAddress(dest);
+                            if (loc != null && mounted) {
+                              setState(() {
+                                _destLat = loc.latitude;
+                                _destLng = loc.longitude;
+                              });
+                            }
                           },
                         );
                       }).toList(),
                     ),
-                    
+
+                    // ROUTE PREVIEW MAP
+                    if (_originController.text.isNotEmpty && _destinationController.text.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        'ROUTE PREVIEW',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF64748B),
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      RoutePreviewMap(
+                        originLat: _originLat,
+                        originLng: _originLng,
+                        destLat: _destLat,
+                        destLng: _destLng,
+                        originAddress: _originController.text,
+                        destAddress: _destinationController.text,
+                        height: 180,
+                      ),
+                    ],
+
                     const SizedBox(height: 24),
-                    
-                    // SCHEDULE section
-                    const Text(
+
+                    // 3. SCHEDULE SECTION (From Design Image 1)
+                    Text(
                       'SCHEDULE',
-                      style: TextStyle(
-                        fontSize: 14,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey,
+                        color: const Color(0xFF64748B),
                         letterSpacing: 1,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    
-                    // Now / Later toggle buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() => _scheduleType = 'Now');
-                              if (_originController.text.trim().isEmpty) {
-                                _useCurrentLocation();
-                              }
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              decoration: BoxDecoration(
-                                color: _scheduleType == 'Now' 
-                                    ? Colors.green 
-                                    : Colors.grey.shade100,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'Now',
-                                  style: TextStyle(
-                                    color: _scheduleType == 'Now' 
-                                        ? Colors.white 
-                                        : Colors.grey.shade600,
-                                    fontWeight: FontWeight.w500,
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE2E8F0).withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() => _scheduleType = 'Now');
+                                if (_originController.text.trim().isEmpty) {
+                                  _useCurrentLocation();
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: _scheduleType == 'Now' ? AppColors.primary : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Now',
+                                    style: GoogleFonts.poppins(
+                                      color: _scheduleType == 'Now' ? Colors.white : const Color(0xFF64748B),
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 14,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => setState(() => _scheduleType = 'Later'),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              decoration: BoxDecoration(
-                                color: _scheduleType == 'Later' 
-                                    ? Colors.green 
-                                    : Colors.grey.shade100,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'Later',
-                                  style: TextStyle(
-                                    color: _scheduleType == 'Later' 
-                                        ? Colors.white 
-                                        : Colors.grey.shade600,
-                                    fontWeight: FontWeight.w500,
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _scheduleType = 'Later'),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: _scheduleType == 'Later' ? AppColors.primary : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Later',
+                                    style: GoogleFonts.poppins(
+                                      color: _scheduleType == 'Later' ? Colors.white : const Color(0xFF64748B),
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 14,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    
-                    // Date picker (only shown when "Later" is selected)
+
                     if (_scheduleType == 'Later') ...[
                       const SizedBox(height: 12),
                       GestureDetector(
@@ -533,22 +680,22 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade50,
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade200),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.calendar_today, color: Colors.green.shade700),
+                              Icon(Icons.calendar_today, color: AppColors.primary, size: 20),
                               const SizedBox(width: 12),
                               Text(
                                 _scheduledDateTime == null
                                     ? 'Select date and time'
                                     : '${_scheduledDateTime!.day}/${_scheduledDateTime!.month}/${_scheduledDateTime!.year} at ${_scheduledDateTime!.hour}:${_scheduledDateTime!.minute.toString().padLeft(2, '0')}',
-                                style: TextStyle(
-                                  color: _scheduledDateTime == null 
-                                      ? Colors.grey 
-                                      : Colors.black,
+                                style: GoogleFonts.poppins(
+                                  color: _scheduledDateTime == null ? const Color(0xFF94A3B8) : const Color(0xFF0F172A),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
@@ -556,121 +703,183 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
                         ),
                       ),
                     ],
-                    
+
                     const SizedBox(height: 24),
-                    
-                    // MAXIMUM PASSENGERS section
-                    const Text(
-                      'MAXIMUM PASSENGERS',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Minimum of 3 passengers required.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade500,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    
-                    // Passenger slider
+
+                    // 4. MAXIMUM PASSENGERS SECTION (From Design Image 1)
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(
-                          child: Slider(
-                            value: _maxPassengers.toDouble(),
-                            min: 3,
-                            max: 14,
-                            divisions: 11,
-                            activeColor: Colors.green,
-                            inactiveColor: Colors.grey.shade300,
-                            label: '$_maxPassengers seats',
-                            onChanged: (value) {
-                              setState(() {
-                                _maxPassengers = value.round();
-                              });
-                            },
+                        Text(
+                          'MAXIMUM PASSENGERS',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF64748B),
+                            letterSpacing: 1,
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade50,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.green.shade200),
-                          ),
-                          child: Text(
-                            '$_maxPassengers seats available',
-                            style: TextStyle(
-                              color: Colors.green.shade700,
-                              fontWeight: FontWeight.w500,
-                            ),
+                        Text(
+                          'Minimum of 3 required.',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF94A3B8),
                           ),
                         ),
                       ],
                     ),
-                    
-                    const SizedBox(height: 32),
-                    
-                    // Create Group button
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '$_maxPassengers',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF0F172A),
+                                ),
+                              ),
+                              Text(
+                                'Seats available',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  color: const Color(0xFF64748B),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              IconButton(
+                                onPressed: _maxPassengers > 3
+                                    ? () => setState(() => _maxPassengers--)
+                                    : null,
+                                icon: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: _maxPassengers > 3 ? const Color(0xFF64748B) : const Color(0xFFCBD5E1),
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.remove,
+                                    size: 18,
+                                    color: _maxPassengers > 3 ? const Color(0xFF334155) : const Color(0xFF94A3B8),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              IconButton(
+                                onPressed: _maxPassengers < 14
+                                    ? () => setState(() => _maxPassengers++)
+                                    : null,
+                                icon: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.add, size: 18, color: Colors.white),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    Center(
+                      child: Column(
+                        children: [
+                          TextButton.icon(
+                            onPressed: _isCreating ? null : _seedTestGroupRide,
+                            icon: Icon(Icons.bolt_rounded, color: AppColors.primary, size: 18),
+                            label: Text(
+                              '⚡ Autofill & Create Sample Test Ride (Forming)',
+                              style: GoogleFonts.poppins(
+                                color: AppColors.primary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          TextButton.icon(
+                            onPressed: _isCreating ? null : _seedReadyGroupRide,
+                            icon: const Icon(Icons.verified_rounded, color: Color(0xFF16A34A), size: 18),
+                            label: Text(
+                              '🚗 Create Ready Ride (3/4 Joined - Ready for Driver)',
+                              style: GoogleFonts.poppins(
+                                color: const Color(0xFF16A34A),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // 5. CREATE GROUP BUTTON (From Design Image 1)
                     SizedBox(
                       width: double.infinity,
+                      height: 54,
                       child: ElevatedButton(
                         onPressed: _isCreating ? null : _createGroup,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
+                          backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(14),
                           ),
                         ),
                         child: _isCreating
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text(
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : Text(
                                 'Create Group',
-                                style: TextStyle(
+                                style: GoogleFonts.poppins(
                                   fontSize: 16,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 12),
-                    
-                    // Terms and conditions notice
+
                     Center(
                       child: Text(
                         'By creating a group, you agree to our Travel Safety Guidelines.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade500,
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          color: const Color(0xFF94A3B8),
                         ),
                         textAlign: TextAlign.center,
                       ),
                     ),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
             ),
-            
+
             // Bottom Navigation Bar
             const BottomNavBar(currentIndex: 0),
           ],
@@ -689,7 +898,7 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green.shade200),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
         boxShadow: const [
           BoxShadow(
             color: Colors.black12,
@@ -703,10 +912,10 @@ class _CreateGroupRideScreenState extends State<CreateGroupRideScreen> {
         children: suggestions.map((loc) {
           return ListTile(
             dense: true,
-            leading: const Icon(Icons.location_on_outlined, color: Colors.green, size: 18),
+            leading: Icon(Icons.location_on_outlined, color: AppColors.primary, size: 18),
             title: Text(
               loc.address,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600),
             ),
             onTap: () => onSelect(loc),
           );
