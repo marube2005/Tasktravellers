@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Outcome of a successful [AuthService.loginUser] call.
@@ -199,6 +200,34 @@ class AuthService {
       throw Exception(
         'An unexpected error occurred while fetching profile: $e',
       );
+    }
+  }
+
+  /// Navigates the user to their role-based homepage if a profile exists in DB,
+  /// or to /role-selection if their profile/role is missing.
+  Future<void> handlePostLoginNavigation(BuildContext context) async {
+    try {
+      final profile = await getCurrentUserProfile();
+
+      if (!context.mounted) return;
+
+      if (profile != null && profile['role'] != null && (profile['role'] as String).isNotEmpty) {
+        final role = (profile['role'] as String).toLowerCase();
+        if (role == 'admin') {
+          Navigator.pushReplacementNamed(context, '/admin-verification-review');
+        } else if (role == 'sacco') {
+          Navigator.pushReplacementNamed(context, '/sacco-dashboard');
+        } else {
+          // Passenger dashboard
+          Navigator.pushReplacementNamed(context, '/dashboard');
+        }
+      } else {
+        Navigator.pushReplacementNamed(context, '/role-selection');
+      }
+    } catch (_) {
+      if (context.mounted) {
+        Navigator.pushReplacementNamed(context, '/role-selection');
+      }
     }
   }
 }

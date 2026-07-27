@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/auth_service.dart';
 import '../themes/app_colors.dart';
 import '../widgets/custom_text_field.dart';
 
@@ -185,7 +186,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Phone verified successfully!')),
         );
-        Navigator.pushReplacementNamed(context, '/role-selection');
+        await AuthService().handlePostLoginNavigation(context);
       }
     } on AuthException catch (e) {
       if (mounted) {
@@ -404,8 +405,8 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
               // Skip option (for email-verified users)
               Center(
                   child: TextButton(
-                    onPressed: () {
-                      Navigator.pushReplacementNamed(context, '/role-selection');
+                    onPressed: () async {
+                      await AuthService().handlePostLoginNavigation(context);
                     },
                   child: Text(
                     'Skip for now',
