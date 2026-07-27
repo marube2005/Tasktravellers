@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -163,11 +166,62 @@ class LocationService {
     }
   }
 
-  /// Search for street/road/location suggestions as the user types.
+  static const String _googleApiKey = String.fromEnvironment(
+    'GOOGLE_MAPS_API_KEY',
+    defaultValue: 'AIzaSyCTJ0oJBPjaMHWmROi7qRu4buwcLYrEeXg',
+  );
+
+  /// Search for street/road/venue location suggestions using Google Places Autocomplete API.
   Future<List<UserLocationResult>> searchAddressSuggestions(String query) async {
     final cleanQuery = query.trim();
     if (cleanQuery.length < 2) return [];
 
+    final url = Uri.parse(
+      'https://maps.googleapis.com/maps/api/place/autocomplete/json'
+      '?input=${Uri.encodeComponent(cleanQuery)}'
+      '&components=country:ke'
+      '&key=$_googleApiKey',
+    );
+
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['status'] == 'OK' && data['predictions'] != null) {
+          final predictions = data['predictions'] as List;
+          final results = <UserLocationResult>[];
+
+          for (final item in predictions.take(5)) {
+            final placeId = item['place_id'] as String?;
+            final description = item['description'] as String? ?? cleanQuery;
+
+            if (placeId != null) {
+              final details = await getPlaceDetails(placeId);
+              if (details != null) {
+                results.add(details);
+                continue;
+              }
+            }
+
+            // Dynamically lookup coordinates for the address description
+            final geoLoc = await getCoordinatesFromAddress(description);
+            if (geoLoc != null) {
+              results.add(UserLocationResult(
+                latitude: geoLoc.latitude,
+                longitude: geoLoc.longitude,
+                address: description,
+              ));
+            }
+          }
+
+          if (results.isNotEmpty) return results;
+        }
+      }
+    } catch (e) {
+      debugPrint('Note: Google Places API error, falling back to native geocoding: $e');
+    }
+
+    // Native geocoding fallback
     try {
       final locations = await locationFromAddress(cleanQuery);
       final results = <UserLocationResult>[];
@@ -195,9 +249,47 @@ class LocationService {
       }
 
       return results;
-    } catch (e) {
+    } catch (_) {
       return [];
     }
+  }
+
+  /// Get precise latitude and longitude for a Google Place ID.
+  Future<UserLocationResult?> getPlaceDetails(String placeId) async {
+    final url = Uri.parse(
+      'https://maps.googleapis.com/maps/api/place/details/json'
+      '?place_id=$placeId'
+      '&fields=geometry,formatted_address,name'
+      '&key=$_googleApiKey',
+    );
+
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['status'] == 'OK' && data['result'] != null) {
+          final result = data['result'];
+          final location = result['geometry']?['location'];
+          final name = result['name'] as String?;
+          final formattedAddress = result['formatted_address'] as String?;
+
+          final address = (name != null && name.isNotEmpty && formattedAddress != null && !formattedAddress.contains(name))
+              ? '$name, $formattedAddress'
+              : (formattedAddress ?? name ?? '');
+
+          if (location != null && location['lat'] != null && location['lng'] != null) {
+            return UserLocationResult(
+              latitude: (location['lat'] as num).toDouble(),
+              longitude: (location['lng'] as num).toDouble(),
+              address: address,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Note: Place Details error: $e');
+    }
+    return null;
   }
 
   // =========================================================================
