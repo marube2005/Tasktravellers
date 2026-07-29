@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Outcome of a successful [AuthService.loginUser] call.
@@ -11,6 +12,14 @@ enum LoginResult {
   /// Authentication succeeded but the email address has not yet been confirmed.
   /// The user has been signed out automatically.
   emailNotVerified,
+}
+
+enum SignUpResult {
+  /// User session created and active.
+  sessionCreated,
+
+  /// Account created but email verification link was sent.
+  needsEmailVerification,
 }
 
 /// A service class to handle all Supabase Authentication logic.
@@ -33,29 +42,52 @@ class AuthService {
   /// 2. PUBLIC METHODS
   /// =========================================================================
 
-  /// Registers a new user with an email and password.
-  ///
-  /// Throws an [Exception] on failure. On success the caller should show a
-  /// confirmation message and navigate to '/email_verification'.
-  ///
-  /// NOTE: The MVP specifies Phone/OTP. Supabase supports this via
-  /// 'signInWithOtp(phone: ...)'. Email/Password is used here for simplicity;
-  /// the phone flow requires additional backend OTP handling.
-  Future<void> signUpUser({
+  /// Signs up a user using email and password.
+  Future<SignUpResult> signUpUser({
     required String name,
     required String email,
-    required String phone,
+    String? phone,
     required String password,
   }) async {
     try {
+      final cleanEmail = email.trim().toLowerCase();
+      final cleanName = name.trim();
+      final cleanPhone = (phone != null && phone.trim().isNotEmpty) ? phone.trim() : null;
+
+      final dataPayload = <String, dynamic>{
+        'name': cleanName,
+        'full_name': cleanName,
+      };
+      if (cleanPhone != null) {
+        dataPayload['phone'] = cleanPhone;
+      }
+
       final authResponse = await _supabaseClient.auth.signUp(
-        email: email.trim(),
+        email: cleanEmail,
         password: password.trim(),
-        data: {'name': name.trim(), 'phone': phone.trim()},
+        data: dataPayload,
       );
 
       final user = authResponse.user;
       if (user == null) throw Exception('Signup failed.');
+
+      if (authResponse.session != null) {
+        try {
+          final userMap = <String, dynamic>{
+            'id': user.id,
+            'email': cleanEmail,
+            'name': cleanName,
+            'role': 'passenger',
+          };
+          if (cleanPhone != null) {
+            userMap['phone'] = cleanPhone;
+          }
+          await _supabaseClient.from('users').upsert(userMap);
+        } catch (_) {}
+        return SignUpResult.sessionCreated;
+      } else {
+        return SignUpResult.needsEmailVerification;
+      }
     } on AuthException catch (e) {
       throw Exception('Supabase Auth Error: ${e.message}');
     } catch (e) {
@@ -70,7 +102,7 @@ class AuthService {
   Future<LoginResult> loginUser(String email, String password) async {
     try {
       final response = await _supabaseClient.auth.signInWithPassword(
-        email: email.trim(),
+        email: email.trim().toLowerCase(),
         password: password.trim(),
       );
 
@@ -85,6 +117,11 @@ class AuthService {
 
       return LoginResult.success;
     } on AuthException catch (e) {
+      if (e.message.toLowerCase().contains('invalid login credentials')) {
+        throw Exception(
+          'Invalid credentials. If you recently signed up, please verify your email inbox or check your password.',
+        );
+      }
       throw Exception(e.message);
     } catch (e) {
       throw Exception('Login error: $e');
@@ -163,6 +200,34 @@ class AuthService {
       throw Exception(
         'An unexpected error occurred while fetching profile: $e',
       );
+    }
+  }
+
+  /// Navigates the user to their role-based homepage if a profile exists in DB,
+  /// or to /role-selection if their profile/role is missing.
+  Future<void> handlePostLoginNavigation(BuildContext context) async {
+    try {
+      final profile = await getCurrentUserProfile();
+
+      if (!context.mounted) return;
+
+      if (profile != null && profile['role'] != null && (profile['role'] as String).isNotEmpty) {
+        final role = (profile['role'] as String).toLowerCase();
+        if (role == 'admin') {
+          Navigator.pushReplacementNamed(context, '/admin-verification-review');
+        } else if (role == 'sacco') {
+          Navigator.pushReplacementNamed(context, '/sacco-dashboard');
+        } else {
+          // Passenger dashboard
+          Navigator.pushReplacementNamed(context, '/dashboard');
+        }
+      } else {
+        Navigator.pushReplacementNamed(context, '/role-selection');
+      }
+    } catch (_) {
+      if (context.mounted) {
+        Navigator.pushReplacementNamed(context, '/role-selection');
+      }
     }
   }
 }

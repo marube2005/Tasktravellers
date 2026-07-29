@@ -31,30 +31,64 @@ class UserService {
   // =========================================================================
 
   /// Fetches the current authenticated user's profile from the 'users' table.
+  /// Gracefully falls back to Supabase auth metadata if DB record fields are empty.
   Future<AppUser?> fetchCurrentUserProfileModel() async {
-    final userId = _currentUserId;
-    if (userId == null) {
+    final authUser = _supabaseClient.auth.currentUser;
+    if (authUser == null) {
       return null;
     }
 
     try {
-      final Map<String, dynamic> profile = await _supabaseClient
+      final Map<String, dynamic>? profile = await _supabaseClient
           .from('users')
           .select('*')
-          .eq('id', userId)
-          .single();
+          .eq('id', authUser.id)
+          .maybeSingle();
 
-      return AppUser.fromMap(profile);
-    } on PostgrestException catch (e) {
-      // PGRST116 means 'No rows found', which should only happen if the
-      // profile creation step after sign-up failed.
-      if (e.code == 'PGRST116') {
-        return null; 
+      if (profile != null) {
+        final userFromDb = AppUser.fromMap(profile);
+        final metaName = authUser.userMetadata?['name'] as String?;
+        final metaPhone = authUser.phone ?? authUser.userMetadata?['phone'] as String?;
+        final metaEmail = authUser.email;
+
+        return AppUser(
+          id: userFromDb.id,
+          name: (userFromDb.name != null && userFromDb.name!.trim().isNotEmpty)
+              ? userFromDb.name
+              : metaName,
+          email: (userFromDb.email != null && userFromDb.email!.trim().isNotEmpty)
+              ? userFromDb.email
+              : (metaEmail != null && !metaEmail.startsWith('user-') ? metaEmail : null),
+          phone: (userFromDb.phone != null && userFromDb.phone!.trim().isNotEmpty)
+              ? userFromDb.phone
+              : metaPhone,
+          role: userFromDb.role,
+          isVerified: userFromDb.isVerified,
+          homeArea: userFromDb.homeArea,
+          preferredRoutes: userFromDb.preferredRoutes,
+          emergencyContactName: userFromDb.emergencyContactName,
+          emergencyContactPhone: userFromDb.emergencyContactPhone,
+          avatarUrl: userFromDb.avatarUrl,
+          createdAt: userFromDb.createdAt ?? DateTime.tryParse(authUser.createdAt),
+        );
       }
-      throw Exception('Unable to load profile right now.');
     } catch (e) {
-      throw Exception('Unable to load profile right now.');
+      // Ignore DB read error and proceed to fallback
     }
+
+    // Fallback if no DB row exists yet
+    final metaName = authUser.userMetadata?['name'] as String?;
+    final metaPhone = authUser.phone ?? authUser.userMetadata?['phone'] as String?;
+    final metaEmail = authUser.email;
+
+    return AppUser(
+      id: authUser.id,
+      name: metaName,
+      email: metaEmail != null && !metaEmail.startsWith('user-') ? metaEmail : null,
+      phone: metaPhone,
+      role: 'passenger',
+      createdAt: DateTime.tryParse(authUser.createdAt),
+    );
   }
 
   /// Backward-compatible map-based profile fetch for older callers.

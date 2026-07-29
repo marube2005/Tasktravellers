@@ -39,7 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         Navigator.pushReplacementNamed(context, '/email_verification');
       } else {
-        Navigator.pushReplacementNamed(context, '/role-selection');
+        await AuthService().handlePostLoginNavigation(context);
       }
     } catch (e) {
       if (mounted) {

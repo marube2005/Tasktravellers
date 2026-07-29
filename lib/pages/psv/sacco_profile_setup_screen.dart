@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../services/user_service.dart';
 import '../../themes/app_colors.dart';
 import '../../widgets/avatar_picker.dart';
 
@@ -32,11 +33,45 @@ class _SaccoProfileSetupScreenState extends State<SaccoProfileSetupScreen> {
   }
 
   Future<void> _loadExisting() async {
-    final user = Supabase.instance.client.auth.currentUser;
+    User? user;
+    try {
+      final response = await Supabase.instance.client.auth.getUser();
+      user = response.user ?? Supabase.instance.client.auth.currentUser;
+    } catch (_) {
+      user = Supabase.instance.client.auth.currentUser;
+    }
+
     if (user != null) {
-      _contactEmailController.text = user.email ?? '';
-      _contactNameController.text =
-          user.userMetadata?['name'] as String? ?? '';
+      if (user.email != null && !user.email!.startsWith('user-')) {
+        _contactEmailController.text = user.email!;
+      }
+      final metaName = (user.userMetadata?['name'] ?? 
+                   user.userMetadata?['full_name'] ?? 
+                   user.userMetadata?['display_name']) as String? ?? '';
+      if (metaName.isNotEmpty) {
+        _contactNameController.text = metaName;
+      }
+      final metaPhone = user.phone ?? user.userMetadata?['phone'] as String? ?? '';
+      if (metaPhone.isNotEmpty) {
+        _contactPhoneController.text = metaPhone;
+      }
+
+      try {
+        final profile = await UserService().fetchCurrentUserProfileModel();
+        if (mounted && profile != null) {
+          if (profile.name != null && profile.name!.isNotEmpty) {
+            _contactNameController.text = profile.name!;
+          }
+          if (profile.email != null && profile.email!.isNotEmpty) {
+            _contactEmailController.text = profile.email!;
+          }
+          if (profile.phone != null && profile.phone!.isNotEmpty) {
+            _contactPhoneController.text = profile.phone!;
+          }
+        }
+      } catch (e) {
+        debugPrint('Error loading sacco existing profile: $e');
+      }
     }
   }
 
@@ -49,15 +84,24 @@ class _SaccoProfileSetupScreenState extends State<SaccoProfileSetupScreen> {
       final userId = Supabase.instance.client.auth.currentUser?.id;
       if (userId == null) throw Exception('Not authenticated');
 
-      // Update user role to sacco
+      final contactName = _contactNameController.text.trim();
+      final contactEmail = _contactEmailController.text.trim().toLowerCase();
+      final contactPhone = _contactPhoneController.text.trim();
+
+      // Upsert user profile record
       final userUpdates = <String, dynamic>{
-        'name': _contactNameController.text.trim(),
+        'id': userId,
+        'name': contactName,
+        'phone': contactPhone,
         'role': 'sacco',
       };
+      if (contactEmail.isNotEmpty && !contactEmail.startsWith('user-')) {
+        userUpdates['email'] = contactEmail;
+      }
       if (_logoUrl != null) {
         userUpdates['avatar_url'] = _logoUrl!;
       }
-      await Supabase.instance.client.from('users').update(userUpdates).eq('id', userId);
+      await Supabase.instance.client.from('users').upsert(userUpdates);
 
       // Insert sacco profile details
       final saccoData = <String, dynamic>{

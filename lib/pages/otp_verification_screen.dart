@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/auth_service.dart';
 import '../themes/app_colors.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
@@ -236,7 +237,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Phone verified successfully!')),
         );
-        Navigator.pushReplacementNamed(context, '/role-selection');
+        await AuthService().handlePostLoginNavigation(context);
       }
     } on AuthException catch (e) {
       if (mounted) {

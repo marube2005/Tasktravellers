@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/auth_service.dart';
 import '../themes/app_colors.dart';
 import '../widgets/custom_text_field.dart';
 
@@ -146,10 +147,18 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
           type: OtpType.phoneChange,
         );
 
-        // Sync phone in the public.users database table
-        final userId = client.auth.currentUser?.id;
-        if (userId != null) {
-          await client.from('users').update({'phone': formattedPhone}).eq('id', userId);
+        // Sync profile in public.users database table
+        final user = client.auth.currentUser;
+        if (user != null) {
+          final userEmail = user.email;
+          final updates = <String, dynamic>{
+            'id': user.id,
+            'phone': formattedPhone,
+          };
+          if (userEmail != null && !userEmail.startsWith('user-')) {
+            updates['email'] = userEmail;
+          }
+          await client.from('users').upsert(updates);
         }
       } else {
         // If not logged in, verify OTP with sms type (passwordless sign-in)
@@ -158,13 +167,26 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
           token: otp,
           type: OtpType.sms,
         );
+
+        final user = client.auth.currentUser;
+        if (user != null) {
+          final userEmail = user.email;
+          final updates = <String, dynamic>{
+            'id': user.id,
+            'phone': formattedPhone,
+          };
+          if (userEmail != null && !userEmail.startsWith('user-')) {
+            updates['email'] = userEmail;
+          }
+          await client.from('users').upsert(updates);
+        }
       }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Phone verified successfully!')),
         );
-        Navigator.pushReplacementNamed(context, '/role-selection');
+        await AuthService().handlePostLoginNavigation(context);
       }
     } on AuthException catch (e) {
       if (mounted) {
@@ -383,8 +405,8 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
               // Skip option (for email-verified users)
               Center(
                   child: TextButton(
-                    onPressed: () {
-                      Navigator.pushReplacementNamed(context, '/role-selection');
+                    onPressed: () async {
+                      await AuthService().handlePostLoginNavigation(context);
                     },
                   child: Text(
                     'Skip for now',

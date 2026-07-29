@@ -39,18 +39,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
           phone: _phoneController.text,
           password: _passwordController.text,
         )
-        .then((_) {
+        .then((result) {
           if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Signup successful! Please verify your phone number.'),
-            ),
-          );
-          Navigator.pushReplacementNamed(
-            context,
-            '/phone-verification',
-            arguments: _phoneController.text.trim(),
-          );
+          if (result == SignUpResult.needsEmailVerification) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Account created! Please check your email inbox to verify your account before logging in.'),
+                duration: Duration(seconds: 4),
+              ),
+            );
+            Navigator.pushReplacementNamed(context, '/login');
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Signup successful! Welcome to Travelers.'),
+              ),
+            );
+            Navigator.pushReplacementNamed(context, '/role-selection');
+          }
         })
         .catchError((Object e) {
           if (!mounted) return;
@@ -161,12 +167,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     prefixIcon: Icons.phone_outlined,
                     keyboardType: TextInputType.phone,
                     validator: (val) {
-                      if (val == null || val.trim().isEmpty) {
-                        return 'Enter your phone number';
-                      }
-                      final clean = val.trim().replaceAll(RegExp(r'\s+'), '');
-                      if (clean.length < 9) {
-                        return 'Enter a valid phone number';
+                      if (val != null && val.trim().isNotEmpty) {
+                        final clean = val.trim().replaceAll(RegExp(r'\s+'), '');
+                        if (clean.length < 9) {
+                          return 'Enter a valid phone number';
+                        }
                       }
                       return null;
                     },
