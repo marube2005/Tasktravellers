@@ -1,9 +1,9 @@
-// lib/pages/role_selection_screen.dart
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:frontend/utils/constants.dart';
 
 // Define an enum for the roles for type safety
-enum AppRole { passenger, sacco }
+enum AppRole { passenger, psv }
 
 class RoleSelectionScreen extends StatefulWidget {
   const RoleSelectionScreen({super.key});
@@ -25,10 +25,19 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   void _continue() {
     if (_selectedRole == null) return;
 
-    if (_selectedRole == AppRole.passenger) {
-      Navigator.pushReplacementNamed(context, '/passenger-profile-setup');
-    } else if (_selectedRole == AppRole.sacco) {
-      Navigator.pushReplacementNamed(context, '/sacco-profile-setup');
+    if (_selectedRole == AppRole.psv) {
+      // PSV drivers always go to the combined sign-up + profile screen
+      // (unauthenticated: creates account there; authenticated: updates profile)
+      Navigator.pushNamed(context, '/psv-driver-profile-setup');
+    } else {
+      // Passengers: check auth first
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        Navigator.pushReplacementNamed(context, '/passenger-profile-setup');
+      } else {
+        Navigator.pushNamed(context, '/register',
+            arguments: {'role': 'passenger'});
+      }
     }
   }
 
@@ -70,10 +79,10 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                         const SizedBox(height: 16),
                         RoleCard(
                           icon: Icons.directions_bus_outlined,
-                          title: 'Sacco',
-                          subtitle: 'Manage your fleet and rides.',
-                          isSelected: _selectedRole == AppRole.sacco,
-                          onTap: () => _selectRole(AppRole.sacco),
+                          title: 'PSV Driver',
+                          subtitle: 'Drive PSV matatus, manage rides and view earnings.',
+                          isSelected: _selectedRole == AppRole.psv,
+                          onTap: () => _selectRole(AppRole.psv),
                         ),
                         const SizedBox(height: 16),
                         // Disabled driver option

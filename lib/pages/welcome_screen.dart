@@ -103,7 +103,7 @@ class WelcomeScreen extends StatelessWidget {
                     width: double.infinity,
                     height: 56,
                     child: OutlinedButton(
-                      onPressed: () => Navigator.pushNamed(context, '/register'),
+                      onPressed: () => Navigator.pushNamed(context, '/role-selection'),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(
                           color: isDarkMode ? AppColors.borderDark : AppColors.borderLight,

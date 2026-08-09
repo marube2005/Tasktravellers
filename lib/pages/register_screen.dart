@@ -21,7 +21,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _acceptedTerms = false;
   bool _obscurePassword = true;
 
-  void _signUp() {
+  void _signUp(String selectedRole) {
     if (!_formKey.currentState!.validate()) return;
     if (!_acceptedTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -38,24 +38,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
           email: _emailController.text,
           phone: _phoneController.text,
           password: _passwordController.text,
+          role: selectedRole,
         )
         .then((result) {
           if (!mounted) return;
-          if (result == SignUpResult.needsEmailVerification) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Account created! Please check your email inbox to verify your account before logging in.'),
-                duration: Duration(seconds: 4),
-              ),
-            );
-            Navigator.pushReplacementNamed(context, '/login');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Signup successful! Welcome to Nenda.'),
+            ),
+          );
+          if (selectedRole == 'psv') {
+            Navigator.pushReplacementNamed(context, '/psv-driver-profile-setup');
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Signup successful! Welcome to Travelers.'),
-              ),
-            );
-            Navigator.pushReplacementNamed(context, '/role-selection');
+            Navigator.pushReplacementNamed(context, '/passenger-profile-setup');
           }
         })
         .catchError((Object e) {
@@ -84,6 +79,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final selectedRole = (args != null && args['role'] != null) ? args['role'] as String : 'passenger';
+    final roleTitle = selectedRole == 'psv' ? 'PSV Driver' : 'Passenger';
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -123,23 +122,61 @@ class _SignUpScreenState extends State<SignUpScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Join Nenda',
-                    style: GoogleFonts.poppins(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      color: theme.colorScheme.onSurface,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Join Nenda',
+                        style: GoogleFonts.poppins(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => Navigator.pushReplacementNamed(context, '/role-selection'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                selectedRole == 'psv'
+                                    ? Icons.directions_bus
+                                    : Icons.person,
+                                size: 14,
+                                color: AppColors.primary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                roleTitle,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Create your account to book reliable rides.',
+                    selectedRole == 'psv'
+                        ? 'Create your PSV driver account to manage rides.'
+                        : 'Create your account to book reliable rides.',
                     style: GoogleFonts.poppins(
                       color: theme.colorScheme.onSurfaceVariant,
-                      fontSize: 15,
+                      fontSize: 14,
                     ),
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 24),
                   AppTextField(
                     controller: _nameController,
                     label: 'Full name',
@@ -228,7 +265,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : _signUp,
+                      onPressed: _isLoading ? null : () => _signUp(selectedRole),
                       child: _isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
                           : const Text('Create account'),
