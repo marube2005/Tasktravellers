@@ -197,6 +197,21 @@ class GroupRepository {
     });
   }
   
+  /// Auto-expires stale group rides created > 14 days ago that were never booked/completed.
+  Future<void> autoExpireStaleGroupRides(String userId) async {
+    try {
+      final cutoff = DateTime.now().subtract(const Duration(days: 14)).toIso8601String();
+      await _supabase
+          .from('group_rides')
+          .update({'status': 'expired'})
+          .eq('creator_id', userId)
+          .inFilter('status', ['forming', 'ready'])
+          .lt('created_at', cutoff);
+    } catch (e) {
+      // Non-critical background cleanup failure logging
+    }
+  }
+
   /// Stream group updates (realtime)
   Stream<GroupRide> streamGroupRide(String groupId) {
     return _supabase

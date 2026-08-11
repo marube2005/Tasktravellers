@@ -81,11 +81,24 @@ class _RideOffersScreenState extends State<RideOffersScreen> {
       final client = Supabase.instance.client;
 
       // Update group_rides table status to 'accepted' with driver info
-      await client.from('group_rides').update({
-        'status': 'accepted',
-        'group_note': 'Assigned to ${offer['sacco_name']} (${offer['plate_number']})',
-        'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', widget.rideId);
+      try {
+        await client.from('group_rides').update({
+          'status': 'accepted',
+          'group_note': 'Assigned to ${offer['sacco_name']} (${offer['plate_number']})',
+          'updated_at': DateTime.now().toIso8601String(),
+        }).eq('id', widget.rideId);
+      } on PostgrestException catch (pe) {
+        if (pe.code == 'PGRST204') {
+          // Fallback if group_note column has not reloaded in schema cache
+          await client.from('group_rides').update({
+            'status': 'accepted',
+            'updated_at': DateTime.now().toIso8601String(),
+          }).eq('id', widget.rideId);
+        } else {
+          rethrow;
+        }
+      }
+
 
       if (!mounted) return;
 

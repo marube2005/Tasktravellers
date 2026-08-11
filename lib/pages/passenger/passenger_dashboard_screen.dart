@@ -8,6 +8,7 @@ import 'package:frontend/models/user.dart';
 import 'package:frontend/services/user_service.dart';
 import 'package:frontend/services/booking_service.dart';
 import 'package:frontend/themes/app_colors.dart';
+import 'package:frontend/repositories/group_repository.dart';
 import 'group_invite_share_screen.dart';
 import 'ride_chat_screen.dart';
 import 'ride_tracking_screen.dart';
@@ -170,10 +171,14 @@ class _HomeTabState extends State<_HomeTab> {
       final client = Supabase.instance.client;
       final userId = client.auth.currentUser?.id;
       if (userId != null) {
+        // Auto-expire stale group rides older than 14 days (2 weeks)
+        await GroupRepository().autoExpireStaleGroupRides(userId);
+
         final response = await client
             .from('group_rides')
             .select()
             .eq('creator_id', userId)
+            .inFilter('status', ['forming', 'ready', 'accepted', 'in_progress'])
             .order('created_at', ascending: false)
             .limit(1)
             .maybeSingle();
